@@ -8,6 +8,8 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 import torchvision.transforms as transforms
+from torch.nn.utils.rnn import pad_sequence
+from pytorch_pretrained_bert import OpenAIGPTTokenizer, OpenAIGPTModel, OpenAIGPTLMHeadModel
 
 class ResNetSimCLR(nn.Module):
     def __init__(self, model='resnet18', projection_dim=128, layers_to_train=['layer4']):
@@ -72,7 +74,7 @@ class ResNetSimCLR(nn.Module):
         x = self.transform(x)
 
         # Extract features from the backbone
-        x = x.unsqueeze(0) # Add batch dimension
+        #x = x.unsqueeze(0) # Add batch dimension
         features = self.backbone(x)
 
         # Flatten the features and pass them through the projection head
@@ -81,7 +83,7 @@ class ResNetSimCLR(nn.Module):
 
         # Return the features and projections
         return features, projection
-class TextEncoder(nn.Module):
+class OpenAI_SIMCLR(nn.Module):
     def __init__(self, model='openai-gpt', projection_dim=128, layers_to_train=['h.11']):
         """
         A PyTorch module for text encoding using a pre-trained OpenAI GPT model.
@@ -91,7 +93,7 @@ class TextEncoder(nn.Module):
             projection_dim (int): The dimension of the projection head output. Defaults to 128.
             layers_to_train (list of str): The names of the layers to train. Defaults to ['h.11'].
         """
-        super(TextEncoder, self).__init__()
+        super(OpenAI_SIMCLR, self).__init__()
 
         # Load backbone and tokenizer
         self.backbone = OpenAIGPTModel.from_pretrained(model)
@@ -112,7 +114,7 @@ class TextEncoder(nn.Module):
             nn.Linear(self.config.n_embd, projection_dim)
         )
 
-    def forward(self, text):
+    def forward(self, texts):
         """
         Forward pass of the TextEncoder module.
 
@@ -123,9 +125,9 @@ class TextEncoder(nn.Module):
             A tuple containing the encoded text features and their projections.
         """
         # Tokenize input text
-        input_ids = self.tokenizer.tokenize(text)
-        indexed_tokens = self.tokenizer.convert_tokens_to_ids(input_ids)
-        tokens_tensor = torch.tensor([indexed_tokens])
+        tokenized_texts = [self.tokenizer.tokenize(text) for text in texts]
+        input_ids = [self.tokenizer.convert_tokens_to_ids(tokens) for tokens in tokenized_texts]
+        tokens_tensor = pad_sequence([torch.tensor(ids) for ids in input_ids], batch_first=True, padding_value=0)
         
         # Get text features from backbone
         features = self.backbone(tokens_tensor)[:, 0, :]
