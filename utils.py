@@ -29,7 +29,7 @@ import torchvision.models as models
 import torch.nn as nn
 
 
-def get_stats():
+def get_gpu_stats():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(device)
     print('No of GPUs i have is',torch.cuda.device_count())

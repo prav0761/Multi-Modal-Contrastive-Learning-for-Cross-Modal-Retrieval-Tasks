@@ -59,7 +59,7 @@ class ResNetSimCLR(nn.Module):
             nn.Linear(in_features, projection_dim)
         )
 
-    def forward(self, x):
+    def forward(self, x,device):
         """
         Performs a forward pass through the ResNetSimCLR model.
 
@@ -72,6 +72,7 @@ class ResNetSimCLR(nn.Module):
         """
         # Apply the transform to the input images
         x = self.transform(x)
+        x=x.to(device)
 
         # Extract features from the backbone
         #x = x.unsqueeze(0) # Add batch dimension
@@ -83,6 +84,9 @@ class ResNetSimCLR(nn.Module):
 
         # Return the features and projections
         return features, projection
+    
+    
+    
 class OpenAI_SIMCLR(nn.Module):
     def __init__(self, model='openai-gpt', projection_dim=128, layers_to_train=['h.11']):
         """
@@ -114,7 +118,7 @@ class OpenAI_SIMCLR(nn.Module):
             nn.Linear(self.config.n_embd, projection_dim)
         )
 
-    def forward(self, texts):
+    def forward(self, texts,device):
         """
         Forward pass of the TextEncoder module.
 
@@ -124,11 +128,12 @@ class OpenAI_SIMCLR(nn.Module):
         Returns:
             A tuple containing the encoded text features and their projections.
         """
+        
         # Tokenize input text
         tokenized_texts = [self.tokenizer.tokenize(text) for text in texts]
         input_ids = [self.tokenizer.convert_tokens_to_ids(tokens) for tokens in tokenized_texts]
         tokens_tensor = pad_sequence([torch.tensor(ids) for ids in input_ids], batch_first=True, padding_value=0)
-        
+        tokens_tensor = tokens_tensor.to(device)
         # Get text features from backbone
         features = self.backbone(tokens_tensor)[:, 0, :]
 
@@ -136,4 +141,3 @@ class OpenAI_SIMCLR(nn.Module):
         projections = self.projection_head(features)
 
         return features, projections
-

@@ -4,7 +4,7 @@
 # In[ ]:
 
 
-# SOURCE(only contrastive loss) -https://zablo.net/blog/post/understanding-implementing-simclr-guide-eli5-pytorch/
+# SOURCE -https://zablo.net/blog/post/understanding-implementing-simclr-guide-eli5-pytorch/
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,29 +13,33 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 class ContrastiveLoss(nn.Module):
-    def __init__(self, batch_size, temperature=0.07):
+    
+    
+    def __init__(self, device,temperature=0.07):
         """
         Constructor for ContrastiveLoss class.
         :param batch_size: the number of pairs of embeddings in each batch
         :param temperature: temperature parameter for the loss function
         """
         super().__init__()
-        self.batch_size = batch_size
-        
+        self.device=device
         # Register temperature and negatives_mask as buffers so that they can be saved and loaded along with the model
         self.register_buffer("temperature", torch.tensor(temperature))
-        self.register_buffer("negatives_mask", (~torch.eye(batch_size * 2, batch_size * 2, dtype=bool)).float())
             
-    def forward(self, emb_i, emb_j):
+    def forward(self, emb_i, emb_j , batchsize):
         """
         Compute contrastive loss given two batches of embeddings.
         :param emb_i: the first batch of embeddings
         :param emb_j: the second batch of embeddings, where corresponding indices are pairs
         :return: the contrastive loss
         """
+        
+        
+        negatives_mask =  (~torch.eye(batchsize * 2, batchsize * 2, dtype=bool)).float().to(self.device)
+
         # Normalize the embeddings to unit length
-        z_i = F.normalize(emb_i, dim=1)
-        z_j = F.normalize(emb_j, dim=1)
+        z_i = F.normalize(emb_i, dim=1).to(self.device)
+        z_j = F.normalize(emb_j, dim=1).to(self.device)
 
         # Concatenate the normalized embeddings into a single tensor
         representations = torch.cat([z_i, z_j], dim=0)
@@ -44,19 +48,19 @@ class ContrastiveLoss(nn.Module):
         similarity_matrix = F.cosine_similarity(representations.unsqueeze(1), representations.unsqueeze(0), dim=2)
         
         # Get the positive pairs from the similarity matrix (diagonal elements at positions k,k+batch_size and k+batch_size,k)
-        sim_ij = torch.diag(similarity_matrix, self.batch_size)
-        sim_ji = torch.diag(similarity_matrix, -self.batch_size)
+        sim_ij = torch.diag(similarity_matrix, batchsize)
+        sim_ji = torch.diag(similarity_matrix, -batchsize)
         positives = torch.cat([sim_ij, sim_ji], dim=0)
         
         # Compute the nominator and denominator for the contrastive loss
         nominator = torch.exp(positives / self.temperature)
-        denominator = self.negatives_mask * torch.exp(similarity_matrix / self.temperature)
+        denominator = negatives_mask * torch.exp(similarity_matrix / self.temperature)
     
         # Compute the partial loss for each pair of embeddings
         loss_partial = -torch.log(nominator / torch.sum(denominator, dim=1))
 
         # Compute the average loss for the batch
-        loss = torch.sum(loss_partial) / (2 * self.batch_size)
+        loss = torch.sum(loss_partial) / (2 * batchsize)
 
         return loss
     
