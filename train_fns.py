@@ -34,8 +34,8 @@ import torch.nn as nn
 # In[3]:
 
 
-def train(dataloader, image_model, text_model, optimizer_image, optimizer_text, criterion,
-          scheduler_image, scheduler_text, device, trade_off_ii=1, trade_off_cc=1):
+def train(dataloader, image_model, text_model, optimizer_image, optimizer_text, criterion,device,
+          scheduler_image=None, scheduler_text=None, trade_off_ii=1, trade_off_cc=1,trade_off_ic=1,trade_off_ci=1):
     """
     Trains the image and text models using the provided dataloader and optimizer.
 
@@ -68,28 +68,30 @@ def train(dataloader, image_model, text_model, optimizer_image, optimizer_text, 
         _, embed_caption1 = text_model(caption1, device)
         _, embed_caption2 = text_model(caption2, device)
 
-        intra_loss = (trade_off_ii * criterion(embed_image1, embed_image2, batch_size) +
-                      trade_off_cc * criterion(embed_caption1, embed_caption2, batch_size))
+        contrastive_loss = (trade_off_ii * criterion(embed_image1, embed_image2, batch_size) +
+                      trade_off_cc * criterion(embed_caption1, embed_caption2, batch_size) +
+                      trade_off_ic * criterion(embed_image1, embed_caption2, batch_size) +
+                     trade_off_ci * criterion(embed_caption1, embed_image2, batch_size) )
 
-        intra_loss.backward()
+        contrastive_loss.backward()
 
         optimizer_image.step()
         optimizer_text.step()
 
         optimizer_image.zero_grad()
         optimizer_text.zero_grad()
+        
+        loss_epoch += contrastive_loss.item()
 
-        scheduler_image.step()
-        scheduler_text.step()
-
-        loss_epoch += intra_loss.item()
-
-        del batch, image1, image2, caption1, caption2, embed_image1, embed_image2, embed_caption1, embed_caption2, intra_loss
+        del batch, image1, image2, caption1, caption2, embed_image1, embed_image2, embed_caption1, embed_caption2, contrastive_loss
         torch.cuda.empty_cache()
-
+    if scheduler_image:
+        scheduler_image.step()
+    if scheduler_text:
+        scheduler_text.step()
     epoch_loss = loss_epoch / len(dataloader)
     return epoch_loss
-def test(dataloader, image_model, text_model, criterion, device, trade_off_ii=1, trade_off_cc=1):
+def test(dataloader, image_model, text_model, criterion, device, trade_off_ii=1, trade_off_cc=1,trade_off_ic=1,trade_off_ci=1):
     """
     Calculate the loss of the model using dataloader, image model, text model,
     and criterion on the given device with the given trade_off values.
@@ -121,12 +123,14 @@ def test(dataloader, image_model, text_model, criterion, device, trade_off_ii=1,
             _, embed_caption1 = text_model(caption1, device)
             _, embed_caption2 = text_model(caption2, device)
 
-            intra_loss = (trade_off_ii * criterion(embed_image1, embed_image2, batch_size) +
-                          trade_off_cc * criterion(embed_caption1, embed_caption2, batch_size))
+            contrastive_loss = (trade_off_ii * criterion(embed_image1, embed_image2, batch_size) +
+                      trade_off_cc * criterion(embed_caption1, embed_caption2, batch_size) +
+                      trade_off_ic * criterion(embed_image1, embed_caption2, batch_size) +
+                     trade_off_ci * criterion(embed_caption1, embed_image2, batch_size) )
 
-            loss_epoch += intra_loss.item()
+            loss_epoch += contrastive_loss.item()
 
-            del batch, image1, image2, caption1, caption2, embed_image1, embed_image2, embed_caption1, embed_caption2, intra_loss
+            del batch, image1, image2, caption1, caption2, embed_image1, embed_image2, embed_caption1, embed_caption2, contrastive_loss
             torch.cuda.empty_cache()
 
     epoch_loss = loss_epoch / len(dataloader)

@@ -4,7 +4,7 @@
 # In[ ]:
 
 
-# SOURCE(only loss fn) -https://zablo.net/blog/post/understanding-implementing-simclr-guide-eli5-pytorch/
+# SOURCE -https://zablo.net/blog/post/understanding-implementing-simclr-guide-eli5-pytorch/
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

@@ -27,9 +27,32 @@ import threading
 import torchvision.models as models
 
 class Logger:
-    def __init__(self, log_file, resnet_save_file, gpt_save_file, optimizer, learning_rate, weight_decay, batch_size, Momentum, temperature, total_epochs):
+    def __init__(self, log_file, 
+                 resnet_save_file, 
+                 gpt_save_file, 
+                 optimizer, 
+                 image_learning_rate, 
+                 text_learning_rate,
+                 weight_decay,
+                 batch_size,
+                 Momentum, 
+                 temperature, 
+                 total_epochs,
+                 trade_off_cc,
+                 trade_off_ii,
+                 trade_off_ic,
+                 trade_off_ci,
+                 resnet_model_name,
+                 gpt_model_name,
+                 resnet_layers,
+                 gpt_layers,
+                 projection_dim,
+                 total_resnet_parameters_train,
+                 total_gpt_parameters_train,
+                 scheduler=True,
+                encoder_last_layer=None):
         """
-        Initializes a Logger object with the given parameters.
+        Initializes a Logger object with the given parameters.,
 
         Args:
             log_file (str): path to the log file
@@ -53,11 +76,25 @@ class Logger:
         self.message = ""
         self.message += f'total epochs: {total_epochs:.1f}\n'
         self.message += f'Optimizer: {optimizer}\n'
-        self.message += f'Learning rate: {learning_rate:.4f}\n'
+        self.message += f'image_learning_rate: {image_learning_rate:.4f}\n'
+        self.message += f'text_learning_rate: {text_learning_rate:.6f}\n'
+        self.message += f' Scheduler: {scheduler}\n'
         self.message += f'Weight decay: {weight_decay:.4f}\n'
         self.message += f'Batch size: {batch_size}\n'
         self.message += f'Momentum: {Momentum}\n'
-        self.message += f'temperature: {temperature}\n\n'
+        self.message += f'temperature: {temperature}\n'
+        self.message += f' trade_off_cc: {trade_off_cc}\n'
+        self.message += f' trade_off_ii: {trade_off_ii}\n'
+        self.message += f' trade_off_ic: {trade_off_ic}\n'
+        self.message += f' trade_off_ci: {trade_off_ci}\n'
+        self.message += f' resnet_model_name: {resnet_model_name}\n'
+        self.message += f' gpt_model_name: {gpt_model_name}\n'
+        self.message += f' resnet_trainable_layers: {resnet_layers}\n'
+        self.message += f' gpt_trainable_layers: {gpt_layers}\n'
+        self.message += f' projection_dim: {projection_dim}\n'
+        self.message += f' encoder_last_layer: {encoder_last_layer}\n'
+        self.message += f' total_resnet_parameters_train: {total_resnet_parameters_train}\n'
+        self.message += f' total_gpt_parameters_train: {total_gpt_parameters_train}\n\n'
         
         with open(self.log_file, 'w') as f:
             f.write(self.message)
@@ -82,17 +119,9 @@ class Logger:
         self.val_losses.append(test_loss)
 
         if test_loss < self.best_val_loss:
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': resnet_model.state_dict(),
-                'loss': test_loss
-            }, self.resnet_save_file)
+            torch.save(resnet_model.state_dict(), self.resnet_save_file)
             
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': gpt_model.state_dict(),
-                'loss': test_loss
-            }, self.gpt_save_file)
+            torch.save(gpt_model.state_dict(), self.gpt_save_file)
 
             self.best_val_loss = test_loss
             self.best_epoch = epoch  # update best_epoch
@@ -117,7 +146,30 @@ class Logger:
         with open(self.log_file, 'a') as f:
             f.write(self.message)
 
-    def plot_losses(self, trial_number, save_dir):
+    def plot_losses(self,
+                    trial_number, 
+                    save_dir,
+                    optimizer,
+                    image_learning_rate,
+                    text_learning_rate,
+                    weight_decay, 
+                    batch_size,
+                    Momentum,
+                    temperature,
+                    total_epochs,
+                    trade_off_cc,
+                    trade_off_ii,
+                    trade_off_ci, 
+                    trade_off_ic,
+                    resnet_model_name,
+                    gpt_model_name,
+                    resnet_layers,
+                    gpt_layers,
+                    projection_dim,
+                    total_resnet_parameters_train,
+                    total_gpt_parameters_train,
+                    scheduler=True,
+                   encoder_last_layer=None):
         """
         Plots the train and validation losses and saves the plot to a file.
 
@@ -125,13 +177,35 @@ class Logger:
         - trial_number (int): the trial number to include in the plot title
         - save_dir (str): the directory to save the plot to
         """
-        fig, ax = plt.subplots(figsize=(8,6))
+        fig, ax = plt.subplots(figsize=(15,5))
         ax.plot(range(len(self.train_losses)), self.train_losses, label='Train Loss')
         ax.plot(range(len(self.val_losses)), self.val_losses, label='Validation Loss')
+        ax.annotate(f'text_learning_rate: {image_learning_rate:.6f}', xy=(0.6, 1), xycoords='axes fraction')
+        ax.annotate(f'total epochs: {total_epochs:.1f}', xy=(0.6, 0.95), xycoords='axes fraction')
+        ax.annotate(f'Optimizer: {optimizer}', xy=(0.6, 0.9), xycoords='axes fraction')
+        ax.annotate(f'image_learning_rate: {image_learning_rate:.4f}', xy=(0.6, 0.85), xycoords='axes fraction')
+        ax.annotate(f'Scheduler: {scheduler}', xy=(0.6, 0.8), xycoords='axes fraction')
+        ax.annotate(f'Weight decay: {weight_decay:.4f}', xy=(0.6, 0.75), xycoords='axes fraction')
+        ax.annotate(f'Batch size: {batch_size}', xy=(0.6, 0.7), xycoords='axes fraction')
+        ax.annotate(f'Momentum: {Momentum}', xy=(0.6, 0.65), xycoords='axes fraction')
+        ax.annotate(f'temperature: {temperature}', xy=(0.6, 0.6), xycoords='axes fraction')
+        ax.annotate(f'trade_off_cc: {trade_off_cc}', xy=(0.6, 0.55), xycoords='axes fraction')
+        ax.annotate(f'trade_off_ii: {trade_off_ii}', xy=(0.6, 0.5), xycoords='axes fraction')
+        ax.annotate(f'trade_off_ci: {trade_off_ci}', xy=(0.6, 0.45), xycoords='axes fraction')
+        ax.annotate(f'trade_off_ic: {trade_off_ic}', xy=(0.6, 0.4), xycoords='axes fraction')
+        ax.annotate(f'resnet_name: {resnet_model_name}', xy=(0.6, 0.35), xycoords='axes fraction')
+        ax.annotate(f'gpt_name: {gpt_model_name}', xy=(0.6, 0.3), xycoords='axes fraction')
+        ax.annotate(f'resnet_trainable_layers: {resnet_layers}', xy=(0.6, 0.25), xycoords='axes fraction')
+        ax.annotate(f'gpt_trainable_layers: {gpt_layers}', xy=(0.6, 0.2), xycoords='axes fraction')
+        ax.annotate(f'parameters_train: {total_resnet_parameters_train}', xy=(0.6, 0.15), xycoords='axes fraction')
+        ax.annotate(f'parameters_train: {total_gpt_parameters_train}', xy=(0.6, 0.1), xycoords='axes fraction')
+        ax.annotate(f'projection_dim: {projection_dim}', xy=(0.6, 0.05), xycoords='axes fraction')
+        ax.annotate(f'encoder_last_layer: {encoder_last_layer}', xy=(0.6, 0.00), xycoords='axes fraction')
+
         ax.set_xlabel('Epoch')
         ax.set_ylabel('Loss')
         ax.set_title(f'training vs testing Trial-{trial_number}')
-        ax.legend()
+        ax.legend(loc='center left')
         file_path = os.path.join(save_dir, f"trial_{trial_number}.png")
         plt.savefig(file_path)
         plt.close()
