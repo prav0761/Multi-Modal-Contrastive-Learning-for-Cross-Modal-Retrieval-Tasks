@@ -13,7 +13,6 @@ import time
 import io
 from io import BytesIO
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'inline')
 import torchvision.models as models
 import torch.nn.functional as F
 import torchvision.transforms as transforms
@@ -34,7 +33,7 @@ import torch.nn as nn
 # In[3]:
 
 
-def train(dataloader, image_model, text_model, optimizer_image, optimizer_text, criterion,device,
+def train(dataloader,data_type, image_model, text_model, optimizer_image, optimizer_text, intra_criterion,inter_criterion,device,
           scheduler_image=None, scheduler_text=None, trade_off_ii=1, trade_off_cc=1,trade_off_ic=1,trade_off_ci=1):
     """
     Trains the image and text models using the provided dataloader and optimizer.
@@ -59,39 +58,46 @@ def train(dataloader, image_model, text_model, optimizer_image, optimizer_text, 
     for idx, batch in enumerate(dataloader):
         image_model.train()
         text_model.train()
-
+        intra_contrastive_loss=0
         batch_size = batch[0].shape[0]
-        image1, image2, caption1, caption2 = batch[0], batch[1], batch[3], batch[4]
-
-        _, embed_image1 = image_model(image1, device)
-        _, embed_image2 = image_model(image2, device)
-        _, embed_caption1 = text_model(caption1, device)
-        _, embed_caption2 = text_model(caption2, device)
-
-        contrastive_loss = (trade_off_ii * criterion(embed_image1, embed_image2, batch_size) +
-                      trade_off_cc * criterion(embed_caption1, embed_caption2, batch_size) +
-                      trade_off_ic * criterion(embed_image1, embed_caption2, batch_size) +
-                     trade_off_ci * criterion(embed_caption1, embed_image2, batch_size) )
-
-        contrastive_loss.backward()
-
+        if data_type=='flickr_travel':
+            image1, image2, caption1, caption2 = batch[0], batch[1], batch[3], batch[4]
+        if data_type=='flickr30k':
+            image1, image2, caption1, caption2 = batch[1], batch[2], batch[3], batch[4]
+            
+        intra_image,inter_image = image_model(image1, device)
+        intra_image1,inter_image1 = image_model(image2, device)
+        intra_contrastive_loss+=(trade_off_ii * intra_criterion(intra_image, intra_image1, batch_size))
+        del intra_image , intra_image1
+        intra_cap,inter_cap = text_model(caption1, device)
+        intra_cap1,inter_cap1 = text_model(caption2, device)
+        intra_contrastive_loss+=(trade_off_cc * intra_criterion(intra_cap, intra_cap1, batch_size))
+        #intra_contrastive_loss = (trade_off_ii * intra_criterion(intra_image, intra_image1, batch_size) +
+                            #trade_off_cc * intra_criterion(intra_cap, intra_cap1, batch_size))
+            
+            
+        ci_loss, ic_loss=inter_criterion(inter_image,inter_image1,inter_cap,inter_cap1)
+        del  inter_image,inter_image1,inter_cap,inter_cap1
+        inter_contrastive_loss= trade_off_ci*ci_loss + trade_off_ic*ic_loss
+        
+        total_loss = intra_contrastive_loss + inter_contrastive_loss
+        total_loss.backward()
         optimizer_image.step()
         optimizer_text.step()
 
         optimizer_image.zero_grad()
         optimizer_text.zero_grad()
-        
-        loss_epoch += contrastive_loss.item()
-
-        del batch, image1, image2, caption1, caption2, embed_image1, embed_image2, embed_caption1, embed_caption2, contrastive_loss
-        torch.cuda.empty_cache()
+        loss_epoch += total_loss.item()
+        #del batch, intra_image, inter_image, intra_image1, inter_image1, intra_cap
+        #del inter_cap, intra_cap1, inter_cap1, intra_contrastive_loss, ci_loss, ic_loss, inter_contrastive_loss
     if scheduler_image:
         scheduler_image.step()
     if scheduler_text:
         scheduler_text.step()
     epoch_loss = loss_epoch / len(dataloader)
     return epoch_loss
-def test(dataloader, image_model, text_model, criterion, device, trade_off_ii=1, trade_off_cc=1,trade_off_ic=1,trade_off_ci=1):
+def test(dataloader, data_type, image_model, text_model,intra_criterion,inter_criterion, device, trade_off_ii=1,
+         trade_off_cc=1,trade_off_ic=1,trade_off_ci=1):
     """
     Calculate the loss of the model using dataloader, image model, text model,
     and criterion on the given device with the given trade_off values.
@@ -116,21 +122,30 @@ def test(dataloader, image_model, text_model, criterion, device, trade_off_ii=1,
             image_model.eval()
             text_model.eval()
             batch_size = batch[0].shape[0]
-            image1, image2, caption1, caption2 = batch[0], batch[1], batch[3], batch[4]
+            if data_type=='flickr_travel':
+                image1, image2, caption1, caption2 = batch[0], batch[1], batch[3], batch[4]
+            if data_type=='flickr30k':
+                image1, image2, caption1, caption2 = batch[1], batch[2], batch[3], batch[4]
+            
 
-            _, embed_image1 = image_model(image1, device)
-            _, embed_image2 = image_model(image2, device)
-            _, embed_caption1 = text_model(caption1, device)
-            _, embed_caption2 = text_model(caption2, device)
+            intra_image,inter_image = image_model(image1, device)
+            intra_image1,inter_image1 = image_model(image2, device)
+            intra_cap,inter_cap = text_model(caption1, device)
+            intra_cap1,inter_cap1 = text_model(caption2, device)
 
-            contrastive_loss = (trade_off_ii * criterion(embed_image1, embed_image2, batch_size) +
-                      trade_off_cc * criterion(embed_caption1, embed_caption2, batch_size) +
-                      trade_off_ic * criterion(embed_image1, embed_caption2, batch_size) +
-                     trade_off_ci * criterion(embed_caption1, embed_image2, batch_size) )
+            intra_contrastive_loss = (trade_off_ii * intra_criterion(intra_image, intra_image1, batch_size) +
+                                trade_off_cc * intra_criterion(intra_cap, intra_cap1, batch_size))
 
-            loss_epoch += contrastive_loss.item()
 
-            del batch, image1, image2, caption1, caption2, embed_image1, embed_image2, embed_caption1, embed_caption2, contrastive_loss
+            ci_loss, ic_loss=inter_criterion(inter_image,inter_image1,inter_cap,inter_cap1)
+            inter_contrastive_loss= trade_off_ci*ci_loss + trade_off_ic*ic_loss
+
+            total_loss = intra_contrastive_loss + inter_contrastive_loss
+
+            loss_epoch += total_loss.item()
+
+            del batch, intra_image, inter_image, intra_image1, inter_image1, intra_cap
+            del inter_cap, intra_cap1, inter_cap1, intra_contrastive_loss, ci_loss, ic_loss, inter_contrastive_loss            
             torch.cuda.empty_cache()
 
     epoch_loss = loss_epoch / len(dataloader)

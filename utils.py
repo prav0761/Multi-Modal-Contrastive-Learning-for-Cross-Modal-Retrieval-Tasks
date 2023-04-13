@@ -12,7 +12,6 @@ import requests
 import io
 from io import BytesIO
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'inline')
 import torchvision.models as models
 import torch.nn.functional as F
 import torchvision.transforms as transforms
@@ -49,3 +48,10 @@ def count_trainable_parameters(model):
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     return total_params
 
+def get_gpu_memory():
+    torch.cuda.empty_cache()
+    mem_allocated = torch.cuda.memory_allocated()
+    mem_cached = torch.cuda.memory_reserved()
+    mem_free = torch.cuda.get_device_properties(0).total_memory - mem_allocated - mem_cached
+    mem_free_gb = mem_free / 1e9
+    print(f"Free GPU memory: {mem_free_gb:.2f} GB")

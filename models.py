@@ -12,7 +12,8 @@ from torch.nn.utils.rnn import pad_sequence
 from pytorch_pretrained_bert import OpenAIGPTTokenizer, OpenAIGPTModel, OpenAIGPTLMHeadModel
 
 class ResNetSimCLR(nn.Module):
-    def __init__(self, model='resnet50', projection_dim=128 ,layers_to_train=['layer4'],encoder_last_layer=None):
+    def __init__(self, model='resnet50', intra_projection_dim=128 ,inter_projection_dim=1024,
+                 layers_to_train=['layer4'],encoder_last_layer=None,evaluate=False):
         """
         Initializes ResNetSimCLR model.
 
@@ -43,6 +44,7 @@ class ResNetSimCLR(nn.Module):
                     param.requires_grad = False
 
         # Remove last fully-connected layer from the backbone
+        self.evaluate=evaluate
         self.backbone = nn.Sequential(*list(backbone.children())[:-1])
         self.encoder_last_layer=encoder_last_layer
         # Define the transform to be applied to input images
@@ -57,11 +59,17 @@ class ResNetSimCLR(nn.Module):
         else:
             projection_head_input=in_features
         # Add the projection head layers
-        self.projection_head = nn.Sequential(
+        self.intra_projection_head = nn.Sequential(
             nn.Linear(projection_head_input, projection_head_input),
             nn.ReLU(),
-            nn.Linear(projection_head_input, projection_dim)
+            nn.Linear(projection_head_input, intra_projection_dim)
         )
+        self.inter_projection_head = nn.Sequential(
+            nn.Linear(projection_head_input, projection_head_input),
+            nn.ReLU(),
+            nn.Linear(projection_head_input, inter_projection_dim)
+        )
+
 
     def forward(self, x,device):
         """
@@ -85,15 +93,21 @@ class ResNetSimCLR(nn.Module):
         features = x.view(x.size(0), -1)
         if self.encoder_last_layer:
             features=self.fc_layer(features)
-        projection = self.projection_head(features)
+        if self.evaluate:
+            return features
+        else:
+            inter_projection = self.inter_projection_head(features)
+            intra_projection=  self.intra_projection_head(features)
 
-        # Return the features and projections
-        return features, projection
+            # Return the features and projections
+            return intra_projection, inter_projection
     
     
     
+
 class OpenAI_SIMCLR(nn.Module):
-    def __init__(self, model='openai-gpt', projection_dim=128,layers_to_train=['h.11'],encoder_last_layer=None):
+    def __init__(self, model='openai-gpt', intra_projection_dim=128,inter_projection_dim=1024,
+                 layers_to_train=['h.11'],encoder_last_layer=None,evaluate=False):
         """
         A PyTorch module for text encoding using a pre-trained OpenAI GPT model.
 
@@ -106,6 +120,7 @@ class OpenAI_SIMCLR(nn.Module):
 
         # Load backbone and tokenizer
         self.backbone = OpenAIGPTModel.from_pretrained(model)
+        self.evaluate=evaluate
         self.config = self.backbone.config
         self.tokenizer = OpenAIGPTTokenizer.from_pretrained(model)
         self.encoder_last_layer=encoder_last_layer
@@ -121,10 +136,15 @@ class OpenAI_SIMCLR(nn.Module):
         else:
             projection_head_input=self.config.n_embd
         # Projection head
-        self.projection_head = nn.Sequential(
+        self.intra_projection_head = nn.Sequential(
             nn.Linear(projection_head_input ,projection_head_input),
             nn.ReLU(),
-            nn.Linear(projection_head_input, projection_dim)
+            nn.Linear(projection_head_input, intra_projection_dim)
+        )
+        self.inter_projection_head = nn.Sequential(
+            nn.Linear(projection_head_input ,projection_head_input),
+            nn.ReLU(),
+            nn.Linear(projection_head_input, inter_projection_dim)
         )
         
     def forward(self, texts,device):
@@ -145,11 +165,14 @@ class OpenAI_SIMCLR(nn.Module):
         tokens_tensor = tokens_tensor.to(device)
         # Get text features from backbone
         all_hidden_states = self.backbone(tokens_tensor)
-        features = torch.mean(all_hidden_states, dim=1)  # Shape: (1, 768)
+        features = torch.mean(all_hidden_states, dim=1)  
 
         if self.encoder_last_layer:
             features=self.fc_layer(features)
-        # Pass text features through projection head
-        projections = self.projection_head(features)
-
-        return features,projections
+        if self.evaluate:
+            return features
+        else:
+            # Pass text features through projection head
+            intra_projections = self.intra_projection_head(features)
+            inter_projections = self.inter_projection_head(features)
+            return intra_projections, inter_projections

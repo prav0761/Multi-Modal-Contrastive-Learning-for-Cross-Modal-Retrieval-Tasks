@@ -10,9 +10,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from lars import LARS
 import torch.optim as optim
+from torch.autograd import Variable
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
-class ContrastiveLoss(nn.Module):
+class intra_ContrastiveLoss(nn.Module):
     
     
     def __init__(self, device,temperature=0.07):
@@ -63,6 +64,68 @@ class ContrastiveLoss(nn.Module):
         loss = torch.sum(loss_partial) / (2 * batchsize)
 
         return loss
+
+    
+def cosine_sim(im, s):
+    # normalize the image and sentence embeddings
+    im = F.normalize(im, p=2, dim=1)
+    s = F.normalize(s, p=2, dim=1)
+    # compute cosine similarity
+    return im.mm(s.t())
+
+class inter_ContrastiveLoss(nn.Module):
+    """
+    Compute contrastive loss
+    """
+
+    def __init__(self, margin=0, measure=False, max_violation=False):
+        super(inter_ContrastiveLoss, self).__init__()
+        self.margin = margin
+        if measure == 'order':
+            self.sim = order_sim
+        else:
+            self.sim = cosine_sim
+
+        self.max_violation = max_violation
+
+    def forward(self, image_embd1, image_embd2, caption_embd1, caption_embd2):
+        # compute image-sentence score matrix
+        scores1 = self.sim(image_embd1, caption_embd2)
+        scores2 = self.sim(caption_embd1, image_embd2)
+
+        # compute the diagonal elements
+        diagonal1 = scores1.diag().view(image_embd1.size(0), 1)
+        diagonal2 = scores2.diag().view(caption_embd1.size(0), 1)
+
+        # expand the diagonal elements to be the same size as scores
+        d11 = diagonal1.expand_as(scores1)
+        d12 = diagonal1.expand_as(scores2)
+        d21 = diagonal2.expand_as(scores1)
+        d22 = diagonal2.expand_as(scores2)
+
+        # compute the losses
+        # image2-caption1
+        cost_im = (self.margin + scores1 - d21).clamp(min=0)
+        # caption2-image1
+        cost_s = (self.margin + scores2 - d12).clamp(min=0)
+
+        # clear diagonals
+        mask1 = torch.eye(scores1.size(0)) > .5
+        mask2 = torch.eye(scores2.size(0)) > .5
+        I1 = Variable(mask1)
+        I2 = Variable(mask2)
+        if torch.cuda.is_available():
+            I1 = I1.cuda()
+            I2 = I2.cuda()
+        cost_im = cost_im.masked_fill_(I1, 0)
+        cost_s = cost_s.masked_fill_(I2, 0)
+
+        # keep the maximum violating negative for each query
+        if self.max_violation:
+            cost_s = cost_s.max(1)[0]
+            cost_im = cost_im.max(0)[0]
+
+        return cost_s.sum() , cost_im.sum()
     
 class Optimizer_simclr:
     def __init__(self, optimizer_name, model_parameters, lr, momentum=None, weight_decay=None, eta=None):
