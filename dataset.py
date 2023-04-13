@@ -84,5 +84,101 @@ class FlickrDataset(Dataset):
         
         else:
             # If no transforms are applied, return the original image and caption
-            return image, caption
+            transform = transforms.ToTensor()
+            return transform(image), caption
 
+class Flickr30kDataset(torch.utils.data.Dataset):
+    def __init__(
+        self,
+        root_dir: str,
+        token_file_path: str,
+        caption_index_1: int = 0,
+        caption_index_2: int = 1,
+        image_transform=None,
+    ):
+        """
+        Dataset for Flickr30k images with corresponding captions.
+
+        Parameters:
+        root_dir (str): path to the root directory of the dataset.
+        token_file_path (str): path to the file containing the captions for the images.
+        caption_index_1 (int): index of the first caption to use (default is 0).
+        caption_index_2 (int): index of the second caption to use (default is 1).
+        image_transform (callable): function to apply to the image(s) (default is None).
+        """
+        self.root_dir = root_dir
+        self.token_file_path = token_file_path
+        self.transform = transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ToTensor()
+               
+            ]
+        )
+        self.captions = self._load_captions()
+        self.caption_index_1 = caption_index_1
+        self.caption_index_2 = caption_index_2
+        self.image_transform = image_transform
+
+    def _load_captions(self) -> dict:
+        """
+        Loads the captions from the token file and returns a dictionary where
+        the keys are the image filenames and the values are the corresponding
+        captions.
+
+        Returns:
+        dict: dictionary with image filenames as keys and lists of captions as values.
+        """
+        with open(self.token_file_path) as tokenfile:
+            captions = tokenfile.readlines()
+        caption_dict = {}
+        for caption in captions:
+            caption_parts = caption.strip().split("#")
+            image_file_name = caption_parts[0]
+            caption_text_parts = caption_parts[1].split("\t")
+            caption_number = int(caption_text_parts[0].replace("#", ""))
+            caption_text = caption_text_parts[1]
+            if image_file_name not in caption_dict:
+                caption_dict[image_file_name] = []
+            caption_dict[image_file_name].append(caption_text)
+        return caption_dict
+
+    def __len__(self) -> int:
+        """
+        Returns the number of images in the dataset.
+
+        Returns:
+        int: number of images in the dataset.
+        """
+        return len(self.captions)
+
+    def __getitem__(self, idx: int) -> tuple:
+        """
+        Returns the image and its corresponding captions at the given index.
+
+        Parameters:
+        idx (int): index of the image to retrieve.
+
+        Returns:
+        tuple: tuple containing the two images and two corresponding captions.
+        """
+        image_filename = list(self.captions.keys())[idx]
+        image_path = os.path.join(self.root_dir, image_filename)
+        image = Image.open(image_path).convert("RGB")
+        captions = self.captions[image_filename]
+        if self.image_transform:
+            # Apply image transforms to create two transformed images
+            img1, img2 = self.image_transform(image)
+            return (
+                self.transform(image),
+                img1,
+                img2,
+                captions[self.caption_index_1],
+                captions[self.caption_index_2],
+            )
+        else:
+            return (
+                image,
+                captions[self.caption_index_1],
+                captions[self.caption_index_2],
+            )

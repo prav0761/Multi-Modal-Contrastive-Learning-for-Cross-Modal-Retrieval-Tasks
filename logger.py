@@ -42,15 +42,13 @@ class Logger:
                  trade_off_ii,
                  trade_off_ic,
                  trade_off_ci,
-                 resnet_model_name,
-                 gpt_model_name,
                  resnet_layers,
                  gpt_layers,
-                 projection_dim,
-                 total_resnet_parameters_train,
-                 total_gpt_parameters_train,
-                 scheduler=True,
-                encoder_last_layer=None):
+                 intra_projection_dim,
+                 inter_projection_dim,
+                 scheduler,
+                 margin,
+                 max_violation):
         """
         Initializes a Logger object with the given parameters.,
 
@@ -87,14 +85,12 @@ class Logger:
         self.message += f' trade_off_ii: {trade_off_ii}\n'
         self.message += f' trade_off_ic: {trade_off_ic}\n'
         self.message += f' trade_off_ci: {trade_off_ci}\n'
-        self.message += f' resnet_model_name: {resnet_model_name}\n'
-        self.message += f' gpt_model_name: {gpt_model_name}\n'
-        self.message += f' resnet_trainable_layers: {resnet_layers}\n'
-        self.message += f' gpt_trainable_layers: {gpt_layers}\n'
-        self.message += f' projection_dim: {projection_dim}\n'
-        self.message += f' encoder_last_layer: {encoder_last_layer}\n'
-        self.message += f' total_resnet_parameters_train: {total_resnet_parameters_train}\n'
-        self.message += f' total_gpt_parameters_train: {total_gpt_parameters_train}\n\n'
+        self.message += f' resnet_layers: {resnet_layers}\n'
+        self.message += f' gpt_layers: {gpt_layers}\n'
+        self.message += f' margin: {margin}\n'
+        self.message += f' max_violation: {max_violation}\n'
+        self.message += f' intra_projection_dim: {intra_projection_dim}\n'
+        self.message += f' inter_projection_dim: {inter_projection_dim}\n\n'
         
         with open(self.log_file, 'w') as f:
             f.write(self.message)
@@ -161,15 +157,13 @@ class Logger:
                     trade_off_ii,
                     trade_off_ci, 
                     trade_off_ic,
-                    resnet_model_name,
-                    gpt_model_name,
                     resnet_layers,
                     gpt_layers,
-                    projection_dim,
-                    total_resnet_parameters_train,
-                    total_gpt_parameters_train,
-                    scheduler=True,
-                   encoder_last_layer=None):
+                    intra_projection_dim,
+                    inter_projection_dim,
+                    scheduler,
+                     margin,
+                   max_violation):
         """
         Plots the train and validation losses and saves the plot to a file.
 
@@ -193,14 +187,12 @@ class Logger:
         ax.annotate(f'trade_off_ii: {trade_off_ii}', xy=(0.6, 0.5), xycoords='axes fraction')
         ax.annotate(f'trade_off_ci: {trade_off_ci}', xy=(0.6, 0.45), xycoords='axes fraction')
         ax.annotate(f'trade_off_ic: {trade_off_ic}', xy=(0.6, 0.4), xycoords='axes fraction')
-        ax.annotate(f'resnet_name: {resnet_model_name}', xy=(0.6, 0.35), xycoords='axes fraction')
-        ax.annotate(f'gpt_name: {gpt_model_name}', xy=(0.6, 0.3), xycoords='axes fraction')
-        ax.annotate(f'resnet_trainable_layers: {resnet_layers}', xy=(0.6, 0.25), xycoords='axes fraction')
-        ax.annotate(f'gpt_trainable_layers: {gpt_layers}', xy=(0.6, 0.2), xycoords='axes fraction')
-        ax.annotate(f'parameters_train: {total_resnet_parameters_train}', xy=(0.6, 0.15), xycoords='axes fraction')
-        ax.annotate(f'parameters_train: {total_gpt_parameters_train}', xy=(0.6, 0.1), xycoords='axes fraction')
-        ax.annotate(f'projection_dim: {projection_dim}', xy=(0.6, 0.05), xycoords='axes fraction')
-        ax.annotate(f'encoder_last_layer: {encoder_last_layer}', xy=(0.6, 0.00), xycoords='axes fraction')
+        ax.annotate(f'resnet_trainable_layers: {resnet_layers}', xy=(0.6, 0.35), xycoords='axes fraction')
+        ax.annotate(f'gpt_trainable_layers: {gpt_layers}', xy=(0.6, 0.3), xycoords='axes fraction')
+        ax.annotate(f'intra_projection_dim: {intra_projection_dim}', xy=(0.6, 0.25), xycoords='axes fraction')
+        ax.annotate(f'inter_projection_dim: {inter_projection_dim}', xy=(0.6, 0.2), xycoords='axes fraction')
+        ax.annotate(f'margin: {margin}', xy=(0.6, 0.15), xycoords='axes fraction')
+        ax.annotate(f'max_violation: {max_violation}', xy=(0.6, 0.05), xycoords='axes fraction')
 
         ax.set_xlabel('Epoch')
         ax.set_ylabel('Loss')
