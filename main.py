@@ -80,14 +80,19 @@ def main(args):
     image_model_log = os.path.join(logresults_save_dir_path, f'image_model{trial_number}_30k.pth')
     text_model_log = os.path.join(logresults_save_dir_path, f'text_model{trial_number}_30k.pth')
     graph_save_dir = graph_save_dir
-    print(image_layers_to_train,text_layers_to_train)
 # Create train and test datasets using FlickrDataset
     dataset = Flickr30kDataset(flickr30k_images_dir_path, 
                                flickr30k_tokens_dir_path,
                                caption_index_1=caption_index_1,
                                caption_index_2=caption_index_2,
                               image_transform=SimCLRData_image_Transform())
-    train_set, val_set, test_set = torch.utils.data.random_split(dataset, [29783, 1000, 1000])
+    indices = list(range(len(dataset)))
+    train_indices = indices[:29783]
+    val_indices = indices[29783:30783]
+    test_indices = indices[30783:]
+    train_set = torch.utils.data.Subset(dataset, train_indices)
+    val_set = torch.utils.data.Subset(dataset, val_indices)
+    test_set = torch.utils.data.Subset(dataset, test_indices)
 
     train_loader = DataLoader(train_set, 
                              batch_size=batch_size, 
@@ -127,7 +132,8 @@ def main(args):
                                        lr=image_learning_rate,
                                        momentum=momentum,
                                        weight_decay=weight_decay)
-
+    
+    
     scheduler_image = optimizer_image.scheduler
     optimizer_image = optimizer_image.optimizer
 
@@ -162,7 +168,6 @@ def main(args):
                     margin=margin,
                     max_violation=max_violation)
     logger_save.start_training()
-    print('started_training')
     # Loop through epochs and train the models
     for epoch in tqdm(range(total_epochs)):
 
@@ -178,8 +183,8 @@ def main(args):
                                intra_criterion=intra_loss,
                                inter_criterion=newinter_loss,
                                 device=device,
-                               scheduler_image=scheduler_image,
-                               scheduler_text=scheduler_text,
+                               scheduler_image=None,
+                               scheduler_text=None,
                                trade_off_ii=trade_off_ii, 
                                trade_off_cc=trade_off_cc,
                                trade_off_ic=trade_off_ic,
@@ -224,7 +229,9 @@ def main(args):
                             text_layers_to_train,
                             intra_projection_dim,
                           inter_projection_dim,
-                          scheduler=scheduler_status)
+                          scheduler=scheduler_status,
+                           margin =margin,
+                           max_violation= max_violation)
     
 if __name__ == '__main__':
     # Parse command-line arguments

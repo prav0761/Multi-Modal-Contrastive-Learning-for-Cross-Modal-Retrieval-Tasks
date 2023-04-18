@@ -72,14 +72,12 @@ def train(dataloader,data_type, image_model, text_model, optimizer_image, optimi
         intra_cap,inter_cap = text_model(caption1, device)
         intra_cap1,inter_cap1 = text_model(caption2, device)
         intra_contrastive_loss+=(trade_off_cc * intra_criterion(intra_cap, intra_cap1, batch_size))
-        #intra_contrastive_loss = (trade_off_ii * intra_criterion(intra_image, intra_image1, batch_size) +
-                            #trade_off_cc * intra_criterion(intra_cap, intra_cap1, batch_size))
+
             
             
         ci_loss, ic_loss=inter_criterion(inter_image,inter_image1,inter_cap,inter_cap1)
         del  inter_image,inter_image1,inter_cap,inter_cap1
         inter_contrastive_loss= trade_off_ci*ci_loss + trade_off_ic*ic_loss
-        
         total_loss = intra_contrastive_loss + inter_contrastive_loss
         total_loss.backward()
         optimizer_image.step()
@@ -88,8 +86,6 @@ def train(dataloader,data_type, image_model, text_model, optimizer_image, optimi
         optimizer_image.zero_grad()
         optimizer_text.zero_grad()
         loss_epoch += total_loss.item()
-        #del batch, intra_image, inter_image, intra_image1, inter_image1, intra_cap
-        #del inter_cap, intra_cap1, inter_cap1, intra_contrastive_loss, ci_loss, ic_loss, inter_contrastive_loss
     if scheduler_image:
         scheduler_image.step()
     if scheduler_text:
@@ -137,16 +133,17 @@ def test(dataloader, data_type, image_model, text_model,intra_criterion,inter_cr
                                 trade_off_cc * intra_criterion(intra_cap, intra_cap1, batch_size))
 
 
-            ci_loss, ic_loss=inter_criterion(inter_image,inter_image1,inter_cap,inter_cap1)
-            inter_contrastive_loss= trade_off_ci*ci_loss + trade_off_ic*ic_loss
 
+            
+            
+            ci_loss, ic_loss=inter_criterion(inter_image,inter_image1,inter_cap,inter_cap1)
+            del  inter_image,inter_image1,inter_cap,inter_cap1
+            inter_contrastive_loss= trade_off_ci*ci_loss + trade_off_ic*ic_loss
             total_loss = intra_contrastive_loss + inter_contrastive_loss
 
             loss_epoch += total_loss.item()
 
-            del batch, intra_image, inter_image, intra_image1, inter_image1, intra_cap
-            del inter_cap, intra_cap1, inter_cap1, intra_contrastive_loss, ci_loss, ic_loss, inter_contrastive_loss            
-            torch.cuda.empty_cache()
+
 
     epoch_loss = loss_epoch / len(dataloader)
     return epoch_loss
@@ -154,5 +151,56 @@ def test(dataloader, data_type, image_model, text_model,intra_criterion,inter_cr
 
 # In[5]:
 
+def fine_tune_train(data_loader, image_model,text_model,data_type,device,criterion,
+                    optimizer_image, optimizer_text, scheduler_image=None,scheduler_text=None, caption_idx=None):
+    image_model.train()
+    text_model.train()
+    loss_epoch=0
+    for idx, batch in enumerate(data_loader):
+        if data_type=='flickr_travel':
+            image1, image2, caption1, caption2 = batch[0], batch[1], batch[3], batch[4]
+        if data_type=='flickr30k':
+            image,caption = batch[0], batch[caption_idx]
 
+        img_embed = image_model(image,device,single=False)
+        cap_embed = text_model(caption,device,single=False)
+
+
+        loss=criterion(img_embed,cap_embed,batch[0].shape[0]) + criterion(cap_embed,img_embed,batch[0].shape[0])
+        #loss=0.1*criterion(img_embed,cap_embed) 
+        loss.backward()
+        optimizer_image.step()
+        optimizer_text.step()
+
+        optimizer_image.zero_grad()
+        optimizer_text.zero_grad()
+        loss_epoch += loss.item()
+    epoch_loss = loss_epoch / len(data_loader)
+    if scheduler_image:
+        scheduler_image.step()
+    if scheduler_text:
+        scheduler_text.step()
+        
+    return round(epoch_loss,4)
+
+
+def fine_tune_val(data_loader, image_model,text_model,data_type,device,criterion, caption_idx=None):
+    loss_epoch=0
+    for idx, batch in enumerate(data_loader):
+        image_model.eval()
+        text_model.eval()
+        if data_type=='flickr_travel':
+            image , caption = batch[0], batch[1]
+        if data_type=='flickr30k':
+            image,caption = batch[0], batch[caption_idx]
+
+        img_embed = image_model(image,device,single=False)
+        cap_embed = text_model(caption,device,single=False)
+
+
+        loss=criterion(img_embed,cap_embed,batch[0].shape[0]) + criterion(cap_embed,img_embed,batch[0].shape[0])
+        #loss=0.1*criterion(img_embed,cap_embed)
+        loss_epoch += loss.item()
+    epoch_loss = loss_epoch / len(data_loader)
+    return round(epoch_loss,4)
 

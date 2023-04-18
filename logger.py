@@ -202,3 +202,99 @@ class Logger:
         plt.savefig(file_path)
         plt.close()
 
+class Fine_Tune_Logger:
+    def __init__(self, 
+                 log_file, 
+                 resnet_save_file, 
+                 gpt_save_file, 
+                 optimizer, 
+                 image_learning_rate, 
+                 text_learning_rate,
+                 weight_decay,
+                 batch_size,
+                 Momentum, 
+                 temperature, 
+                 total_epochs,
+                output_dim,
+                 scheduler):
+        """
+        Initializes a Logger object with the given parameters.,
+
+        Args:
+            log_file (str): path to the log file
+            resnet_save_file (str): path to save the ResNet model
+            gpt_save_file (str): path to save the GPT model
+            optimizer (str): name of the optimizer used for training
+            learning_rate (float): learning rate used for training
+            weight_decay (float): weight decay used for training
+            batch_size (int): batch size used for training
+            Momentum (float): momentum used for training
+            temperature (float): temperature used for training
+            total_epochs (int): total number of epochs to run
+        """
+        self.log_file = log_file
+        self.r_5_itscore = []  # list to store validation losses for each epoch
+        self.resnet_save_file = resnet_save_file
+        self.gpt_save_file = gpt_save_file
+        self.best_r_5_itscore = float('-inf')  # initialize the best validation loss as infinity
+        self.best_epoch = -1  # initialize the best epoch to -1
+        self.message = ""
+        self.message += f'total epochs: {total_epochs:.1f}\n'
+        self.message += f'Optimizer: {optimizer}\n'
+        self.message += f'image_learning_rate: {image_learning_rate:.4f}\n'
+        self.message += f'text_learning_rate: {text_learning_rate:.6f}\n'
+        self.message += f' Scheduler: {scheduler}\n'
+        self.message += f'Weight decay: {weight_decay:.4f}\n'
+        self.message += f'Batch size: {batch_size}\n'
+        self.message += f'Momentum: {Momentum}\n'
+        self.message += f'temperature: {temperature}\n'
+        self.message += f' output_dim: {output_dim}\n\n'
+        
+        with open(self.log_file, 'w') as f:
+            f.write(self.message)
+    def fine_tune_log(self, epoch, resnet_model, gpt_model, r_5_it, time_for_epoch):
+        """
+        Logs the training progress and saves the models with the best validation loss.
+
+        Args:
+        epoch: int, the current epoch number.
+        resnet_model: nn.Module, the ResNet model.
+        gpt_model: nn.Module, the GPT model.
+        train_loss: float, the training loss.
+        test_loss: float, the validation loss.
+        time_for_epoch: float, the time taken for this epoch.
+        """
+        message = f'Epoch {epoch}: R@5_IMAGE-TEXT-SCORE: {r_5_it:.4f}, Time:{round(time_for_epoch,2)}\n'
+
+        with open(self.log_file, 'a') as f:
+            f.write(message)
+            
+        self.r_5_itscore.append(r_5_it)
+
+        if r_5_it > self.best_r_5_itscore:
+            torch.save(resnet_model.state_dict(), self.resnet_save_file)
+            
+            torch.save(gpt_model.state_dict(), self.gpt_save_file)
+
+            self.resnet_model = r_5_it
+            self.best_epoch = epoch  # update best_epoch
+
+    def start_training(self):
+        """
+        Logs the start of training.
+        """
+        self.start_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+        self.message = f'Starting training at {self.start_time}\n\n'  # Create a message indicating the start time of training
+        with open(self.log_file, 'a') as f:
+            f.write(self.message)  # Write the message to the log file
+
+
+    def end_training(self):
+        """
+        Logs the end of training and the best validation loss achieved with the corresponding epoch.
+        """
+        self.end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+        self.message = f'Ending training at {self.end_time}\n'
+        self.message += f'Best validation loss: {self.best_val_loss:.4f} (epoch {self.best_epoch})\n\n'
+        with open(self.log_file, 'a') as f:
+            f.write(self.message)

@@ -95,6 +95,7 @@ class Flickr30kDataset(torch.utils.data.Dataset):
         caption_index_1: int = 0,
         caption_index_2: int = 1,
         image_transform=None,
+        evaluate=False
     ):
         """
         Dataset for Flickr30k images with corresponding captions.
@@ -119,7 +120,8 @@ class Flickr30kDataset(torch.utils.data.Dataset):
         self.caption_index_1 = caption_index_1
         self.caption_index_2 = caption_index_2
         self.image_transform = image_transform
-
+        if evaluate:
+            self.evaluate=evaluate
     def _load_captions(self) -> dict:
         """
         Loads the captions from the token file and returns a dictionary where
@@ -178,7 +180,10 @@ class Flickr30kDataset(torch.utils.data.Dataset):
             )
         else:
             return (
-                image,
-                captions[self.caption_index_1],
-                captions[self.caption_index_2],
+                self.transform(image),
+                captions[0],
+                captions[1],
+                captions[2],
+                captions[3],
+                captions[4]
             )

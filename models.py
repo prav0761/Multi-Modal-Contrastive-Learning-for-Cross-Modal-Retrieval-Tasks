@@ -176,3 +176,60 @@ class OpenAI_SIMCLR(nn.Module):
             intra_projections = self.intra_projection_head(features)
             inter_projections = self.inter_projection_head(features)
             return intra_projections, inter_projections
+        
+        
+class Image_fine_tune_model(nn.Module):
+    def __init__(self, weights_file,output_dim=1024):
+        super(Image_fine_tune_model, self).__init__()
+        self.model_resnet = ResNetSimCLR(
+            model='resnet50',
+            intra_projection_dim=128,
+            inter_projection_dim=1024,
+            layers_to_train=[],
+            evaluate=False
+        )
+        self.model_resnet.load_state_dict(torch.load(weights_file))
+        self.finetune_backbone = self.model_resnet.backbone
+        self.fc_layer = nn.Sequential(
+            nn.Linear(2048, 2048),
+            nn.ReLU(),
+            nn.Linear(2048, output_dim)
+        )
+
+    def forward(self, img,device,single=False):
+        if single:
+            features = self.finetune_backbone(img.to(device).unsqueeze(0))
+        else:
+            features = self.finetune_backbone(img.to(device))
+        features = features.view(features.size(0), -1)
+        image_embed = self.fc_layer(features)
+        return image_embed
+    
+    
+    
+class Text_fine_tune_model(nn.Module):
+    def __init__(self, weights_file,output_dim=1024):
+        super(Text_fine_tune_model, self).__init__()
+        self.gpt_model = OpenAI_SIMCLR(
+                        model='openai-gpt',
+                        intra_projection_dim=128,
+                        inter_projection_dim=1024,
+                        layers_to_train=[],
+                        evaluate=True
+                    )
+
+        self.gpt_model.load_state_dict(torch.load(weights_file))
+        self.fc_layer = nn.Sequential(
+            nn.Linear(768, 768),
+            nn.ReLU(),
+            nn.Linear(768, output_dim)
+        )
+
+    def forward(self, text,device,single=False):
+        if single:
+            text_features=self.gpt_model([text],device)
+        else:
+            text_features=self.gpt_model(text,device)
+        text_features = text_features.view(text_features.size(0), -1)
+        text_embed = self.fc_layer(text_features)
+        return text_embed
