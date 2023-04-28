@@ -93,3 +93,46 @@ def args_finetune():
     args = parser.parse_args()
 
     return args
+def args_finetune_travel():
+    parser = argparse.ArgumentParser(description='finetuning Training')
+    
+    # Model hyperparameters
+    parser.add_argument('--trial_number', type=int, default=6, help='Trial number for the experiment')
+    parser.add_argument('--output_dim', type=int, default=1024, help='Inter-attention projection dimension')
+    parser.add_argument('--data_type', type=str, default='flickr_travel', help='flickrtravel or flickr30k')
+    parser.add_argument('--image_learning_rate', type=float, default=0.001, help='Learning rate for image encoder')
+    parser.add_argument('--text_learning_rate', type=float, default=0.001, help='Learning rate for text encoder')
+    parser.add_argument('--momentum', type=float, default=0.9, help='Momentum for SGD optimizer')
+    parser.add_argument('--temperature', type=float, default=0.07, help='Temperature for softmax in contrastive loss')
+    parser.add_argument('--weight_decay', type=float, default=0.0001, help='Weight decay for SGD optimizer')
+    parser.add_argument('--optimizer_type', type=str, default='sgd', help='Optimizer type (sgd or adam)')
+    parser.add_argument('--total_epochs', type=int, default=100, help='Total number of training epochs')
+    parser.add_argument('--batch_size', type=int, default=128, help='Batch size for training')
+    parser.add_argument('--caption_idx_eval', type=int, default=1, help='Index of first caption to be compared')
+    
+    # Paths and directories
+    parser.add_argument('--scheduler_status', type=bool, default=True, help='Whether to use scheduler or not')
+    parser.add_argument('--flickr30k_root_train_dir_path', 
+                        type=str, default='data/', 
+                        help='Directory path for Flickr30k images')
+    parser.add_argument('--flickr30k_train_dir_path', 
+                        type=str, default='data/train', 
+                        help='Directory path for Flickr30k images')
+    parser.add_argument('--flickr30k_root_test_dir_path', 
+                        type=str, default='data/', 
+                        help='Directory path for Flickr30k images')
+    parser.add_argument('--flickr30k_test_dir_path', 
+                        type=str, default='data/test', 
+                        help='Directory path for Flickr30k images')
+    parser.add_argument('--logresults_save_dir_path', 
+                        type=str, default='/work/08629/pradhakr/maverick2/cv_project/flickr30k_finetune_results', 
+                        help='Directory path for Flickr30k results finetuning')
+    parser.add_argument('--image_weights_file', type=str, 
+                        default='/work/08629/pradhakr/maverick2/cv_project/flickr30k_imagecaption/image_model6_30k.pth',
+                        help='image_weights_file')                   
+    parser.add_argument('--text_weights_file', type=str, 
+                        default='/work/08629/pradhakr/maverick2/cv_project/flickr30k_imagecaption/text_model6_30k.pth',
+                        help='text_weights_file')                    
+    args = parser.parse_args()
+
+    return args

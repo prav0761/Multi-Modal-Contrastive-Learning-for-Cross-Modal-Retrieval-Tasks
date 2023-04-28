@@ -276,7 +276,7 @@ class Fine_Tune_Logger:
             
             torch.save(gpt_model.state_dict(), self.gpt_save_file)
 
-            self.resnet_model = r_5_it
+            self.best_r_5_itscore = r_5_it
             self.best_epoch = epoch  # update best_epoch
 
     def start_training(self):
@@ -295,6 +295,6 @@ class Fine_Tune_Logger:
         """
         self.end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         self.message = f'Ending training at {self.end_time}\n'
-        self.message += f'Best validation loss: {self.best_val_loss:.4f} (epoch {self.best_epoch})\n\n'
+        self.message += f'Best validation loss: {self.best_r_5_itscore:.4f} (epoch {self.best_epoch})\n\n'
         with open(self.log_file, 'a') as f:
             f.write(self.message)

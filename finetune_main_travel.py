@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[5]:
+# In[1]:
 
 
 import torch
@@ -39,12 +39,12 @@ from image_transforms import SimCLRData_image_Transform
 from dataset import FlickrDataset,Flickr30kDataset
 from models import ResNetSimCLR,OpenAI_SIMCLR,Image_fine_tune_model ,Text_fine_tune_model
 from utils import layerwise_trainable_parameters,count_trainable_parameters,get_gpu_memory,recall_score_calculate
-from utils import get_all_recall_scores,get_img_txt_embed
+from utils import get_all_recall_scores,get_img_txt_embed , recall_score_calculate_travel
 from metrics import inter_ContrastiveLoss, intra_ContrastiveLoss,cosine_sim , finetune_ContrastiveLoss
 from metrics import LARS,Optimizer_simclr
 from logger import Logger ,Fine_Tune_Logger
 from train_fns import train, test , fine_tune_train ,fine_tune_val
-from args import args_c , args_finetune
+from args import args_c , args_finetune ,args_finetune_travel
 torch.cuda.empty_cache()
 torch.manual_seed(1234)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -65,28 +65,25 @@ def main(args):
     batch_size = args.batch_size
     caption_idx_eval=args.caption_idx_eval
     scheduler_status=args.scheduler_status
-    flickr30k_images_dir_path=args.flickr30k_images_dir_path
-    flickr30k_tokens_dir_path=args.flickr30k_tokens_dir_path
+    flickr30k_root_train_dir_path=args.flickr30k_root_train_dir_path
+    flickr30k_root_test_dir_path=args.flickr30k_root_test_dir_path
+    flickr30k_train_dir_path=args.flickr30k_train_dir_path
+    flickr30k_test_dir_path=args.flickr30k_test_dir_path
     logresults_save_dir_path=args.logresults_save_dir_path
-    train_log = os.path.join(logresults_save_dir_path, f'finetune{trial_number}_30k.log')
-    image_model_log = os.path.join(logresults_save_dir_path, f'image_model_finetune{trial_number}_30k.pth')
-    text_model_log = os.path.join(logresults_save_dir_path, f'text_model_finetune{trial_number}_30k.pth')
+    train_log = os.path.join(logresults_save_dir_path, f'finetune{trial_number}travel_30k.log')
+    image_model_log = os.path.join(logresults_save_dir_path, f'image_model_finetune{trial_number}travel_30k.pth')
+    text_model_log = os.path.join(logresults_save_dir_path, f'text_model_finetune{trial_number}travel_30k.pth')
     image_model_weights_file=args.image_weights_file
     text_model_weights_file=args.text_weights_file
 
-    dataset = Flickr30kDataset(flickr30k_images_dir_path, 
-                                   flickr30k_tokens_dir_path,
-                                   caption_index_1=0,
-                                   caption_index_2=1,
-                                  image_transform=None,
-                                      evaluate=True)
-    indices = list(range(len(dataset)))
-    train_indices = indices[:29783]
-    val_indices = indices[29783:30783]
-    test_indices = indices[30783:]
-    train_set = torch.utils.data.Subset(dataset, train_indices)
-    val_set = torch.utils.data.Subset(dataset, val_indices)
-    test_set = torch.utils.data.Subset(dataset, test_indices)
+    
+    train_set = FlickrDataset(flickr30k_root_train_dir_path, flickr30k_train_dir_path, 'train',
+                              image_transform=None,
+                              caption_transform=None)
+
+    val_set = FlickrDataset(flickr30k_root_test_dir_path, flickr30k_test_dir_path, 'test',
+                             image_transform=None,
+                             caption_transform=None)
     train_loader = DataLoader(train_set, 
                              batch_size=batch_size, 
                              shuffle=True, 
@@ -94,20 +91,12 @@ def main(args):
                              pin_memory=True)
     val_loader = DataLoader(val_set, 
                              batch_size=batch_size, 
-                             shuffle=True, 
-                             num_workers=4, 
-                             pin_memory=True)
-    test_loader = DataLoader(test_set, 
-                             batch_size=batch_size, 
-                             shuffle=True, 
+                             shuffle=False, 
                              num_workers=4, 
                              pin_memory=True)
 
-
-    images, txt1, txt2, txt3, txt4, txt5, index1 = zip(*[(val_set[i][0], val_set[i][1], val_set[i][2],
-                                                          val_set[i][3], val_set[i][4], val_set[i][5], torch.tensor(i)) 
-                                                         for i in range(len(val_set))])
-
+    images, all_txt = zip(*[(val_set[i][0], val_set[i][1]) 
+                               for i in range(len(val_set))])
 
     model_finetune_img=Image_fine_tune_model(weights_file=image_model_weights_file,
                                             output_dim=output_dim).to(device)
@@ -134,7 +123,7 @@ def main(args):
 
     #scheduler_text = optimizer_text.scheduler
     optimizer_text = optimizer_text.optimizer
-
+    
     
     scheduler_image = torch.optim.lr_scheduler.MultiStepLR(optimizer_image, milestones=[20], gamma=0.1)
     scheduler_text = torch.optim.lr_scheduler.MultiStepLR(optimizer_text, milestones=[20], gamma=0.1)
@@ -182,19 +171,26 @@ def main(args):
                                    criterion=cont_loss,
                                    caption_idx=caption_idx_eval)
 
+            model_finetune_img.eval()
+            model_finetune_text.eval()
+            image_embed = model_finetune_img(torch.stack(images), device, single=False)
+            text_embed= model_finetune_text(all_txt, device, single=False)
+            r_1_it=recall_score_calculate_travel(image_embed,text_embed,top_k=1,image_to_txt=True)
+            r_5_it=recall_score_calculate_travel(image_embed,text_embed,top_k=5,image_to_txt=True)
+            r_10_it=recall_score_calculate_travel(image_embed,text_embed,top_k=10,image_to_txt=True)
 
-            image_embed ,text_embeds=get_img_txt_embed(images,txt1,txt2,txt3,txt4,
-                                                  txt5,model_finetune_img,model_finetune_text,device)
-            r_1_it,r_5_it,r_10_it,r_1_ti,r_5_ti,r_10_ti=get_all_recall_scores(image_embed,text_embeds)
+
+            r_1_ti=recall_score_calculate_travel(image_embed,text_embed,top_k=1,image_to_txt=False)
+            r_5_ti=recall_score_calculate_travel(image_embed,text_embed,top_k=5,image_to_txt=False)
+            r_10_ti=recall_score_calculate_travel(image_embed,text_embed,top_k=10,image_to_txt=False)    
             print('epoch {:03d}: train_loss = {:.4f}, val_loss = {:.4f}, recall@1 = {:.4f}, recall@5 = {:.4f}, recall@10 = {:.4f}'
               .format(epoch, train_loss, test_loss, r_1_it, r_5_it, r_10_it))
             end = time.time()
             logger_save.fine_tune_log(epoch + 1, model_finetune_img, model_finetune_text, r_5_it, end - start)
     logger_save.end_training()
-
 if __name__ == '__main__':
     # Parse command-line arguments
-    args = args_finetune()
+    args = args_finetune_travel()
 
     # Call the main function with the parsed arguments
     main(args)

@@ -179,7 +179,7 @@ class OpenAI_SIMCLR(nn.Module):
         
         
 class Image_fine_tune_model(nn.Module):
-    def __init__(self, weights_file,output_dim=1024):
+    def __init__(self, weights_file=None,output_dim=1024):
         super(Image_fine_tune_model, self).__init__()
         self.model_resnet = ResNetSimCLR(
             model='resnet50',
@@ -188,7 +188,8 @@ class Image_fine_tune_model(nn.Module):
             layers_to_train=[],
             evaluate=False
         )
-        self.model_resnet.load_state_dict(torch.load(weights_file))
+        if weights_file:
+            self.model_resnet.load_state_dict(torch.load(weights_file))
         self.finetune_backbone = self.model_resnet.backbone
         self.fc_layer = nn.Sequential(
             nn.Linear(2048, 2048),
@@ -208,7 +209,7 @@ class Image_fine_tune_model(nn.Module):
     
     
 class Text_fine_tune_model(nn.Module):
-    def __init__(self, weights_file,output_dim=1024):
+    def __init__(self, weights_file=None,output_dim=1024):
         super(Text_fine_tune_model, self).__init__()
         self.gpt_model = OpenAI_SIMCLR(
                         model='openai-gpt',
@@ -217,8 +218,8 @@ class Text_fine_tune_model(nn.Module):
                         layers_to_train=[],
                         evaluate=True
                     )
-
-        self.gpt_model.load_state_dict(torch.load(weights_file))
+        if weights_file:
+            self.gpt_model.load_state_dict(torch.load(weights_file))
         self.fc_layer = nn.Sequential(
             nn.Linear(768, 768),
             nn.ReLU(),
