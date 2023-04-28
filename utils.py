@@ -91,19 +91,36 @@ def recall_score_calculate(image_embed,text_embeds,top_k,image_to_txt=True):
     recall_score = sum(recalls) / len(recalls)
     return recall_score
 
+
+def recall_score_calculate_travel(image_embed,text_embed,top_k,image_to_txt=True):    
+    if image_to_txt:
+        similarities = cosine_sim(image_embed, text_embed)
+    else:
+        similarities = cosine_sim(text_embed, image_embed)
+    topk_indices = torch.topk(similarities, k=top_k, dim=1)[1]
+    recalls=[]
+    for i, indices in enumerate(topk_indices):
+        if i in indices:
+            recalls.append(1)
+        else:
+            recalls.append(0)
+    recall_score = sum(recalls) / len(recalls)
+    return recall_score
 def get_all_recall_scores(image_embed,text_embeds):
     r_1_it=recall_score_calculate(image_embed,text_embeds,top_k=1,image_to_txt=True)
     r_5_it=recall_score_calculate(image_embed,text_embeds,top_k=5,image_to_txt=True)
     r_10_it=recall_score_calculate(image_embed,text_embeds,top_k=10,image_to_txt=True)
     
     
-    r_1_ti=recall_score_calculate(image_embed,text_embeds,top_k=1,image_to_txt=True)
-    r_5_ti=recall_score_calculate(image_embed,text_embeds,top_k=5,image_to_txt=True)
-    r_10_ti=recall_score_calculate(image_embed,text_embeds,top_k=10,image_to_txt=True)    
+    r_1_ti=recall_score_calculate(image_embed,text_embeds,top_k=1,image_to_txt=False)
+    r_5_ti=recall_score_calculate(image_embed,text_embeds,top_k=5,image_to_txt=False)
+    r_10_ti=recall_score_calculate(image_embed,text_embeds,top_k=10,image_to_txt=False)    
     
     return r_1_it,r_5_it,r_10_it,r_1_ti,r_5_ti,r_10_ti
 
 def get_img_txt_embed(images, txt1, txt2, txt3, txt4, txt5, image_model, text_model,device):
+    image_model.eval()
+    text_model.eval()
     image_embed = image_model(torch.stack(images), device, single=False)
     text_embeds = []
     text_embeds.append(text_model(txt1, device, single=False))

@@ -158,7 +158,7 @@ def fine_tune_train(data_loader, image_model,text_model,data_type,device,criteri
     loss_epoch=0
     for idx, batch in enumerate(data_loader):
         if data_type=='flickr_travel':
-            image1, image2, caption1, caption2 = batch[0], batch[1], batch[3], batch[4]
+            image , caption = batch[0], batch[1]
         if data_type=='flickr30k':
             image,caption = batch[0], batch[caption_idx]
 
