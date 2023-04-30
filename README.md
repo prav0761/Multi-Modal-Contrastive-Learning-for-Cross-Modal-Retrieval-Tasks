@@ -1,4 +1,12 @@
 # cv
+pre {
+  background-color: #282c34;
+  color: #abb2bf;
+  padding: 1em;
+  font-size: 90%;
+  border-radius: 6px;
+  overflow-x: auto;
+}
 
 captions file - https://drive.google.com/file/d/1iYykGUUOKlFhNT8nT_RHTKXUQPcQjQ23/view?usp=share_link
 
