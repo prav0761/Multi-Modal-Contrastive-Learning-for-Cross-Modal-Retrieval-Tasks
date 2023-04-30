@@ -10,7 +10,13 @@ images file - https://drive.google.com/file/d/1QVBPbPowBJJkrolDPIWHK1i-1PIJNxpk/
 
 model weights files- https://drive.google.com/drive/folders/17ilpn03CDwGvVtZCFqHNHNmzPAuqo78L?usp=share_link
 
+## Installation
 
+```
+$ conda env create --name simclr --file env.yml
+$ conda activate simclr
+$ python run.py
+```
 
 Reproducing commands
 $python3 -m venv myenv
