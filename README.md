@@ -2,9 +2,7 @@
 ## Captions Download Link
 captions file - https://drive.google.com/file/d/1iYykGUUOKlFhNT8nT_RHTKXUQPcQjQ23/view?usp=share_link
 ## Once downloaded use this command to decompress and extract the results_20130124.token file.
-```
-$ tar-xvzf captions_file.tar
-
+```$ tar-xvzf captions_file.tar
 ```
 
 ## Images Download Link
