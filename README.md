@@ -1,10 +1,12 @@
 # cv
-## captions download link
+## Captions Download Link
 captions file - https://drive.google.com/file/d/1iYykGUUOKlFhNT8nT_RHTKXUQPcQjQ23/view?usp=share_link
 
+## Images Download Link
 
 images file - https://drive.google.com/file/d/1QVBPbPowBJJkrolDPIWHK1i-1PIJNxpk/view?usp=share_link
 
+## Model Weights Link
 
 model weights files- https://drive.google.com/drive/folders/17ilpn03CDwGvVtZCFqHNHNmzPAuqo78L?usp=share_link
 
