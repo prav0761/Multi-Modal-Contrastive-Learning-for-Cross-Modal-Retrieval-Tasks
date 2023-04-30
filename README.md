@@ -1,4 +1,4 @@
-# cv
+### MULTI-MODAL CONTRASTIVE LEARNING FOR IMAGE SIMILARITY AND CROSS MODAL DOWNSTREAM TASKS
 ## Captions Download Link
 captions file - https://drive.google.com/file/d/1iYykGUUOKlFhNT8nT_RHTKXUQPcQjQ23/view?usp=share_link
 
