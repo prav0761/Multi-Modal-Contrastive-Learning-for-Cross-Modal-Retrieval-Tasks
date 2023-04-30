@@ -1,4 +1,4 @@
-### MULTI-MODAL CONTRASTIVE LEARNING FOR IMAGE SIMILARITY AND CROSS MODAL DOWNSTREAM TASKS
+### Multi-Modal Contrastive Learning for Image Similarity and Cross-modal downstream tasks
 ## Captions Download Link
 captions file - https://drive.google.com/file/d/1iYykGUUOKlFhNT8nT_RHTKXUQPcQjQ23/view?usp=share_link
 
