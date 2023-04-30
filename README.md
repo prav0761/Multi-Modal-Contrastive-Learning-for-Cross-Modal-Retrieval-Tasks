@@ -13,21 +13,17 @@ model weights files- https://drive.google.com/drive/folders/17ilpn03CDwGvVtZCFqH
 
 Reproducing commands
 python3 -m venv myenv
+
+
 source myenv/bin/activate
+
+
 git clone https://github.com/prav0761/Multi-Modal.git
+
+
 pip3 install matplotlib torch torchvision pillow requests tqdm pytorch_pretrained_bert nltk
+
+
 
 python3 eval_reproduce.py --flickr30k_images_dir_path '/work/08629/pradhakr/maverick2/reproduce/test_reproduce/flickr30k-images' --flickr30k_tokens_dir_path '/work/08629/pradhakr/maverick2/reproduce/test_reproduce/results_20130124.token' --image_weights_file '/work/08629/pradhakr/maverick2/reproduce/test_reproduce/image_model_finetune241_30k.pth' --text_weights_file '/work/08629/pradhakr/maverick2/reproduce/test_reproduce/text_model_finetune241_30k.pth'
 
-<head>
-  <style>
-    pre {
-      background-color: #282c34;
-      color: #abb2bf;
-      padding: 1em;
-      font-size: 90%;
-      border-radius: 6px;
-      overflow-x: auto;
-    }
-  </style>
-</head>
