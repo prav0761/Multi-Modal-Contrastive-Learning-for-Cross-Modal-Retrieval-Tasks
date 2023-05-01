@@ -1,4 +1,30 @@
 ### Multi-Modal Contrastive Learning for Image Similarity and Cross-modal downstream tasks
+
+
+
+Repository Structure
+--------------------
+
+    |- code/            # all programmatic code relating to the project
+    |  +- templates/    # scripts for generating template files
+    |
+    |- data/            # all data from the study
+    |  |- raw_internal/ # raw data generated in-lab or by collaborators, will not be altered
+    |  |- raw_external/ # data from third-party sources, databases etc, will not be altered
+    |     +- colormaps/ # color palettes used for all figures
+    |
+    |- doc/             # documentation for the study and other explanatory material
+    |  +- paper/        # contains the generated pdf from knitting the markdown file
+    |
+    |- results          # all output from workflows and analyses
+    |  |- figures/      # graphs, designated for manuscript figures
+    |  +- pictures/     # diagrams, images, and other non-graph graphics
+    |
+    |- .gitignore       # files that will not sync to Github
+    |- LICENSE          # license
+    |- README.md        # the top level description of content
+    |- reproduce.Rproj  # contains project information used to customize the behavior of RStudio  
+    +- requirements.txt # the requirements file for reproducing the analysis environment
 ## Captions Download Link
 Captions file - https://drive.google.com/file/d/1iYykGUUOKlFhNT8nT_RHTKXUQPcQjQ23/view?usp=share_link
 ## Once downloaded use this command to decompress and extract the results_20130124.token file.
