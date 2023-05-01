@@ -13,9 +13,9 @@ Images file - https://drive.google.com/file/d/1QVBPbPowBJJkrolDPIWHK1i-1PIJNxpk/
 $ tar-xvzf flickr30-images.tar.gz
 ```
 ## Model Weights Link
+This link has weights files for both image and text encoder
 
 Model weights files- https://drive.google.com/drive/folders/17ilpn03CDwGvVtZCFqHNHNmzPAuqo78L?usp=share_link
-This link has weights files for both image and text encoder
 
 ## Reproducing commands
 Replace the directories in the code with your current locations of data and weights files.
