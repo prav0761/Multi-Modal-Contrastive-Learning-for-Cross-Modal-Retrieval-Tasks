@@ -4,10 +4,10 @@
 Repository Structure
 --------------------
 
-    |- args/            # args for sh file
-    |- captions_transform/# scripts for text augmentations
-    |- image_transform/# scripts for image augmentations
-    |- dataset.py/ # scripts for dataset loaders
+    |- args           # args for sh file
+    |- captions_transform# scripts for text augmentations
+    |- image_transform# scripts for image augmentations
+    |- dataset.py # scripts for dataset loaders
     |- eval_reproduce.py # scripts for reproducing results and evaluation
     |- finetune_main.py  # scripts for finetuning on flickr30k_dataset for cross modal tasks
     |- finetune_main_travel.py  # scripts for finetuning on flickr travel dataset for visaluzations img-sim, txt-img retrieval
