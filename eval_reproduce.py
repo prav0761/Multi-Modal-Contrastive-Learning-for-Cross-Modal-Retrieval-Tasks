@@ -52,6 +52,18 @@ from logger import Logger ,Fine_Tune_Logger
 from train_fns import train, test , fine_tune_train ,fine_tune_val
 from args import args_c , args_finetune
 def main(flickr30k_images_dir_path,flickr30k_tokens_dir_path,image_weights_file,text_weights_file):
+    """
+    Main function to fine-tune image and text models on Flickr30k dataset and compute recall scores.
+
+    Args:
+    flickr30k_images_dir_path (str): Path to the directory containing the Flickr30k images.
+    flickr30k_tokens_dir_path (str): Path to the directory containing the Flickr30k tokens.
+    image_weights_file (str): Path to the saved weights file for the fine-tuned image model.
+    text_weights_file (str): Path to the saved weights file for the fine-tuned text model.
+
+    Returns:
+    Results, r@k
+    """
     torch.cuda.empty_cache()
     torch.manual_seed(1234)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
