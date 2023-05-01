@@ -112,7 +112,9 @@ def main(flickr30k_images_dir_path,flickr30k_tokens_dir_path,image_weights_file,
     text_weights_file = text_weights_file
 
     model_finetune_img.load_state_dict(torch.load(image_weights_file))
+    model_finetune_img.eval()
     model_finetune_text.load_state_dict(torch.load(text_weights_file))
+    model_finetune_text.eval()
     # Call the fine-tune validation function
     image_embed ,text_embeds=get_img_txt_embed(images,txt1,txt2,txt3,txt4,
                                                   txt5,model_finetune_img,model_finetune_text,device)
