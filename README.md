@@ -25,6 +25,9 @@ Repository Structure
     
 ## Data Downloading Instructions
 Please use the below given google drive links for downloading captions file, images, weights files seperately. Once you downloaded all the files to your local desktop, if you are using tacc i would suggest to move all the weights files, data files to your work or scratch dir since home directory wont have enough space. Once you have these files in tacc directories, just specify the directories in final eval.py command(mentioned in last) to reproduce the result
+
+## GPU
+Please run of v100 or p100 in maverick2 since gtx will have memory issues, in frontera you can run in all devices.
 ## Captions Download Link
 Captions file - https://drive.google.com/file/d/1iYykGUUOKlFhNT8nT_RHTKXUQPcQjQ23/view?usp=share_link
 Once downloaded use this command to decompress and extract the results_20130124.token file.
