@@ -163,6 +163,27 @@ def recall_score_calculate_travel(image_embed, text_embed, top_k, image_to_txt=T
 
     recall_score = sum(recalls) / len(recalls)
     return recall_score
+def get_all_recall_scores(image_embed, text_embeds):
+    """
+    Returns recall scores for images to text (it) and text to images (ti)
+    with top_k values of 1, 5, and 10.
+    
+    Parameters:
+        image_embed (array): Embedding for the image.
+        text_embeds (array): List of embeddings for each text.
+    
+    Returns:
+        tuple: A tuple containing the recall scores for 
+        top_k = 1, 5, and 10 for both it and ti.
+    """
+    r_1_it = recall_score_calculate(image_embed, text_embeds, top_k=1, image_to_txt=True)
+    r_5_it = recall_score_calculate(image_embed, text_embeds, top_k=5, image_to_txt=True)
+    r_10_it = recall_score_calculate(image_embed, text_embeds, top_k=10, image_to_txt=True)
+    r_1_ti = recall_score_calculate(image_embed, text_embeds, top_k=1, image_to_txt=False)
+    r_5_ti = recall_score_calculate(image_embed, text_embeds, top_k=5, image_to_txt=False)
+    r_10_ti = recall_score_calculate(image_embed, text_embeds, top_k=10, image_to_txt=False)
+    
+    return r_1_it, r_5_it, r_10_it, r_1_ti, r_5_ti, r_10_ti
 
 def get_img_txt_embed(images, txt1, txt2, txt3, txt4, txt5, image_model, text_model, device):
     """
