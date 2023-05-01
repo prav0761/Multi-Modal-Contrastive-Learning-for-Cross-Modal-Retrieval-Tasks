@@ -27,7 +27,7 @@ Repository Structure
 Please use the below given google drive links for downloading captions file, images, weights files seperately. Once you downloaded all the files to your local desktop, if you are using tacc i would suggest to move all the weights files, data files to your work or scratch dir since home directory wont have enough space. Once you have these files in tacc directories, just specify the directories in final eval.py command(mentioned in last) to reproduce the result
 
 ## GPU
-Please run of v100 or p100 in maverick2 since gtx will have memory issues, in frontera you can run in all devices.
+Please run on v100 or p100 in maverick2 since gtx will have memory issues, in frontera you can run in all devices.
 ## Captions Download Link
 Captions file - https://drive.google.com/file/d/1iYykGUUOKlFhNT8nT_RHTKXUQPcQjQ23/view?usp=share_link
 Once downloaded use this command to decompress and extract the results_20130124.token file.
@@ -55,3 +55,6 @@ $ git clone https://github.com/prav0761/Multi-Modal.git
 $ pip3 install matplotlib torch torchvision pillow requests tqdm pytorch_pretrained_bert nltk
 $ python3 eval_reproduce.py --flickr30k_images_dir_path '/work/08629/pradhakr/maverick2/reproduce/test_reproduce/flickr30k-images' --flickr30k_tokens_dir_path '/work/08629/pradhakr/maverick2/reproduce/test_reproduce/results_20130124.token' --image_weights_file '/work/08629/pradhakr/maverick2/reproduce/test_reproduce/image_model_finetune241_30k.pth' --text_weights_file '/work/08629/pradhakr/maverick2/reproduce/test_reproduce/text_model_finetune241_30k.pth'
 ```
+
+## Results
+![diff_mod_results](https://user-images.githubusercontent.com/93844635/235386518-3b92c2ed-961e-4b95-89ed-78233c344140.PNG)
