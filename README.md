@@ -4,7 +4,7 @@
 Repository Structure
 --------------------
 
-    |- args/            # args
+    |- args/            # args for sh file
     |- captions_transform/# scripts for text augmentations
     |- image_transform/# scripts for image augmentations
     |- dataset.py/ # scripts for dataset loaders
