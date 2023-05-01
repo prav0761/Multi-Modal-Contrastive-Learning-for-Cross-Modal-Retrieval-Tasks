@@ -18,6 +18,7 @@ Model weights files- https://drive.google.com/drive/folders/17ilpn03CDwGvVtZCFqH
 This link has weights files for both image and text encoder
 
 ## Reproducing commands
+Replace the directories in the code with your current locations of data and weights files.
 ```
 $ python3 -m venv myenv
 $ source myenv/bin/activate
