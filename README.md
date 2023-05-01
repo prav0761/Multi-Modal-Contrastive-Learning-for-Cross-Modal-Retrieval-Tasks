@@ -57,3 +57,6 @@ $ python3 eval_reproduce.py --flickr30k_images_dir_path '/work/08629/pradhakr/ma
 
 ## Results
 ![diff_mod_results](https://user-images.githubusercontent.com/93844635/235386518-3b92c2ed-961e-4b95-89ed-78233c344140.PNG)
+
+### Contact
+Please contact praveenradhakrishnan076@utexas.edu if you have any issues in reproducing results , any suggestions, any errors in code. Thank you for the help
