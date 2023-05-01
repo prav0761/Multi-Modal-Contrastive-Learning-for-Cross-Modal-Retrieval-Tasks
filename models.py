@@ -179,8 +179,13 @@ class OpenAI_SIMCLR(nn.Module):
         
         
 class Image_fine_tune_model(nn.Module):
-    def __init__(self, weights_file=None,output_dim=1024):
+    """
+    A fine-tuning model for images.
+    """
+    def __init__(self, weights_file=None, output_dim=1024):
         super(Image_fine_tune_model, self).__init__()
+        
+        # Instantiate ResNetSimCLR model
         self.model_resnet = ResNetSimCLR(
             model='resnet50',
             intra_projection_dim=128,
@@ -188,16 +193,33 @@ class Image_fine_tune_model(nn.Module):
             layers_to_train=[],
             evaluate=False
         )
+        
+        # Load weights if provided
         if weights_file:
             self.model_resnet.load_state_dict(torch.load(weights_file))
+        
+        # Fine-tune backbone
         self.finetune_backbone = self.model_resnet.backbone
+        
+        # Fully-connected layer
         self.fc_layer = nn.Sequential(
             nn.Linear(2048, 2048),
             nn.ReLU(),
             nn.Linear(2048, output_dim)
         )
 
-    def forward(self, img,device,single=False):
+    def forward(self, img, device, single=False):
+        """
+        Forward pass of the image fine-tuning model.
+        
+        Args:
+        - img (torch.Tensor): Input image tensor
+        - device (torch.device): Device to be used for computation
+        - single (bool): If True, the input image is a single image
+        
+        Returns:
+        - image_embed (torch.Tensor): Embedded image tensor
+        """
         if single:
             features = self.finetune_backbone(img.to(device).unsqueeze(0))
         else:
@@ -207,30 +229,49 @@ class Image_fine_tune_model(nn.Module):
         return image_embed
     
     
-    
 class Text_fine_tune_model(nn.Module):
-    def __init__(self, weights_file=None,output_dim=1024):
+    """
+    A fine-tuning model for text.
+    """
+    def __init__(self, weights_file=None, output_dim=1024):
         super(Text_fine_tune_model, self).__init__()
+        
+        # Instantiate OpenAI_SIMCLR model
         self.gpt_model = OpenAI_SIMCLR(
-                        model='openai-gpt',
-                        intra_projection_dim=128,
-                        inter_projection_dim=1024,
-                        layers_to_train=[],
-                        evaluate=True
-                    )
+            model='openai-gpt',
+            intra_projection_dim=128,
+            inter_projection_dim=1024,
+            layers_to_train=[],
+            evaluate=True
+        )
+        
+        # Load weights if provided
         if weights_file:
             self.gpt_model.load_state_dict(torch.load(weights_file))
+        
+        # Fully-connected layer
         self.fc_layer = nn.Sequential(
             nn.Linear(768, 768),
             nn.ReLU(),
             nn.Linear(768, output_dim)
         )
 
-    def forward(self, text,device,single=False):
+    def forward(self, text, device, single=False):
+        """
+        Forward pass of the text fine-tuning model.
+        
+        Args:
+        - text (str or List[str]): Input text or list of texts
+        - device (torch.device): Device to be used for computation
+        - single (bool): If True, the input text is a single text
+        
+        Returns:
+        - text_embed (torch.Tensor): Embedded text tensor
+        """
         if single:
-            text_features=self.gpt_model([text],device)
+            text_features = self.gpt_model([text], device)
         else:
-            text_features=self.gpt_model(text,device)
+            text_features = self.gpt_model(text, device)
         text_features = text_features.view(text_features.size(0), -1)
         text_embed = self.fc_layer(text_features)
         return text_embed
