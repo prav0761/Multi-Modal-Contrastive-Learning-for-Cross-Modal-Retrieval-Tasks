@@ -214,7 +214,7 @@ def fine_tune_train(data_loader, image_model, text_model, data_type, device, cri
 
 
 def fine_tune_val(data_loader, image_model,text_model,data_type,device,criterion, caption_idx=None):
-           """
+    """
     Validates the image and text models on the given data_loader.
 
     Parameters:
