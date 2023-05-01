@@ -17,7 +17,7 @@ This link has weights files for both image and text encoder
 
 Model weights files- https://drive.google.com/drive/folders/17ilpn03CDwGvVtZCFqHNHNmzPAuqo78L?usp=share_link
 
-## Reproducing commands
+## Reproducing results for image-text and text-image R@1,R@5,R@10 recall score on validation set
 Replace the directories in the code with your current locations of data and weights files.
 ```
 $ python3 -m venv myenv
