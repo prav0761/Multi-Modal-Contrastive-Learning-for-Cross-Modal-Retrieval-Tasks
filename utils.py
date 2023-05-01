@@ -114,23 +114,20 @@ def recall_score_calculate(image_embed, text_embeds, top_k, image_to_txt=True):
     """
     topk_indices_list = []
     for text_embed in text_embeds:
-        # Compute cosine similarity between image and text embeddings.
+        # compute cosine similarity between image and text embeddings
         if image_to_txt:
             similarities = cosine_sim(image_embed, text_embed)
         else:
             similarities = cosine_sim(text_embed, image_embed)
-
         topk_indices = torch.topk(similarities, k=top_k, dim=1)[1]
         topk_indices_list.append(topk_indices)
-
-    recalls = []
-    topk_indices_new = torch.cat(topk_indices_list, dim=1)
+    recalls=[]
+    topk_indices_new=torch.concat(topk_indices_list[:],dim=1)
     for i, indices in enumerate(topk_indices_new):
         if i in indices:
             recalls.append(1)
         else:
             recalls.append(0)
-
     recall_score = sum(recalls) / len(recalls)
     return recall_score
 
