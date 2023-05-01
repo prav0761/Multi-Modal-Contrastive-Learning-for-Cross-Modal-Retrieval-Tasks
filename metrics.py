@@ -4,7 +4,7 @@
 # In[ ]:
 
 
-# SOURCE -https://zablo.net/blog/post/understanding-implementing-simclr-guide-eli5-pytorch/
+# SOURCE -https://zablo.net/blog/post/understanding-implementing-simclr-guide-eli5-pytorch/(except optimizer_simclr and cosine functions)
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -127,37 +127,44 @@ class inter_ContrastiveLoss(nn.Module):
 
         return cost_s.sum() , cost_im.sum()
 class finetune_ContrastiveLoss(nn.Module):
-    
-     def __init__(self, margin=0, max_violation=False):
+    """
+    Implements contrastive loss for image-text matching.
+    """
+    def __init__(self, margin: float = 0, max_violation: bool = False):
         super(finetune_ContrastiveLoss, self).__init__()
         self.margin = margin
         self.sim = cosine_sim
-
         self.max_violation = max_violation
 
-     def forward(self, im, s):
-        # compute image-sentence score matrix
+    def forward(self, im: torch.Tensor, s: torch.Tensor) -> torch.Tensor:
+        """
+        Computes the contrastive loss between image and text features.
+
+        Args:
+            im: A tensor of shape (batch_size, feature_dim) representing image features.
+            s: A tensor of shape (batch_size, feature_dim) representing text features.
+
+        Returns:
+            A scalar representing the contrastive loss between the image and text features.
+        """
+        # Compute image-sentence score matrix.
         scores = self.sim(im, s)
         diagonal = scores.diag().view(im.size(0), 1)
         d1 = diagonal.expand_as(scores)
         d2 = diagonal.t().expand_as(scores)
 
-        # compare every diagonal score to scores in its column
-        # caption retrieval
+        # Compare every diagonal score to scores in its column for caption retrieval.
         cost_s = (self.margin + scores - d1).clamp(min=0)
-        # compare every diagonal score to scores in its row
-        # image retrieval
+        # Compare every diagonal score to scores in its row for image retrieval.
         cost_im = (self.margin + scores - d2).clamp(min=0)
 
-        # clear diagonals
+        # Clear diagonals.
         mask = torch.eye(scores.size(0)) > .5
-        I = Variable(mask)
-        if torch.cuda.is_available():
-            I = I.cuda()
+        I = mask.to(im.device)
         cost_s = cost_s.masked_fill_(I, 0)
         cost_im = cost_im.masked_fill_(I, 0)
 
-        # keep the maximum violating negative for each query
+        # Keep the maximum violating negative for each query if self.max_violation is True.
         if self.max_violation:
             cost_s = cost_s.max(1)[0]
             cost_im = cost_im.max(0)[0]
