@@ -1,4 +1,4 @@
-### Multi-Modal Contrastive Learning for Image Similarity and Cross-modal downstream tasks
+## Multi-Modal Contrastive Learning for Image Similarity and Cross-modal downstream tasks
 
 
 Repository Structure
