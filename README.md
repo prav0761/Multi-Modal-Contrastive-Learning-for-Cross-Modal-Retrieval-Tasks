@@ -5,26 +5,22 @@
 Repository Structure
 --------------------
 
-    |- code/            # all programmatic code relating to the project
-    |  +- templates/    # scripts for generating template files
-    |
-    |- data/            # all data from the study
-    |  |- raw_internal/ # raw data generated in-lab or by collaborators, will not be altered
-    |  |- raw_external/ # data from third-party sources, databases etc, will not be altered
-    |     +- colormaps/ # color palettes used for all figures
-    |
-    |- doc/             # documentation for the study and other explanatory material
-    |  +- paper/        # contains the generated pdf from knitting the markdown file
-    |
-    |- results          # all output from workflows and analyses
-    |  |- figures/      # graphs, designated for manuscript figures
-    |  +- pictures/     # diagrams, images, and other non-graph graphics
-    |
-    |- .gitignore       # files that will not sync to Github
+    |- args/            # args
+    |- captions_transform/# scripts for text augmentations
+    |- image_transform/# scripts for image augmentations
+    |- dataset.py/ # scripts for dataset loaders
+    |- eval_reproduce.py # scripts for reproducing results and evaluation
+    |- finetune_main.py  # scripts for finetuning on flickr30k_dataset for cross modal tasks
+    |- finetune_main_travel.py  # scripts for finetuning on flickr travel dataset for visaluzations img-sim, txt-img retrieval
+    |- lars.py          # lars optimizer
+    |- logger.py      # scripts for logger functions
+    |- main.py   # scripts for pretraining on flickr30k(main process)
+    |- metrics.py # scripts for loss functions, optimizer functions
+    |- models.py       # backbone models and finetune models
     |- LICENSE          # license
-    |- README.md        # the top level description of content
-    |- reproduce.Rproj  # contains project information used to customize the behavior of RStudio  
-    +- requirements.txt # the requirements file for reproducing the analysis environment
+    |- README.md        # the top level description of content and commands to reproduce results, data download instructions
+    |- train_fns.py  # contains scripts for training, validation functions
+    |- utils.py #   # scripts for helper functions and metrics calculation code
 ## Captions Download Link
 Captions file - https://drive.google.com/file/d/1iYykGUUOKlFhNT8nT_RHTKXUQPcQjQ23/view?usp=share_link
 ## Once downloaded use this command to decompress and extract the results_20130124.token file.
