@@ -85,19 +85,6 @@ def get_gpu_memory():
     print(f"Free GPU memory: {mem_free_gb:.2f} GB")
     
     
-def cosine_sim(a, b):
-    """
-    Computes the cosine similarity between two tensors.
-
-    Args:
-        a (torch.Tensor): The first tensor.
-        b (torch.Tensor): The second tensor.
-
-    Returns:
-        The cosine similarity between a and b.
-    """
-    return torch.matmul(a, b.T)
-
 
 def recall_score_calculate(image_embed, text_embeds, top_k, image_to_txt=True):
     """
