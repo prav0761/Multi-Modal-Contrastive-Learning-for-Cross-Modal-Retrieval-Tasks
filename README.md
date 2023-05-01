@@ -1,8 +1,7 @@
 ### Multi-Modal Contrastive Learning for Image Similarity and Cross-modal downstream tasks
 
 
-
-###Repository Structure
+Repository Structure
 --------------------
 
     |- args/            # args
