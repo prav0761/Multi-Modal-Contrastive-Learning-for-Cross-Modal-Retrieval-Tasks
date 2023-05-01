@@ -7,6 +7,7 @@
 import argparse
 
 def args_c():
+    """Return the parsed arguments for image captioning training."""
     parser = argparse.ArgumentParser(description='Image Captioning Training')
     
     # Model hyperparameters
@@ -57,6 +58,8 @@ def args_c():
 
 
 def args_finetune():
+    """Return the parsed arguments for finetuning training."""
+
     parser = argparse.ArgumentParser(description='finetuning Training')
     
     # Model hyperparameters
@@ -94,6 +97,7 @@ def args_finetune():
 
     return args
 def args_finetune_travel():
+    """Return the parsed arguments for finetuning training."""
     parser = argparse.ArgumentParser(description='finetuning Training')
     
     # Model hyperparameters
