@@ -51,7 +51,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def main(args):
-
+    """
+    This function contains the main code.
+    """
     trial_number = args.trial_number
     total_epochs=args.total_epochs
     data_type=args.data_type
