@@ -7,6 +7,7 @@
 """
 LARS: Layer-wise Adaptive Rate Scaling
 Converted from TensorFlow to PyTorch
+SOURCE
 https://github.com/google-research/simclr/blob/master/lars_optimizer.py
 """
 
