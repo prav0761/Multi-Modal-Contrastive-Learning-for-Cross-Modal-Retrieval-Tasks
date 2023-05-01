@@ -151,23 +151,52 @@ def test(dataloader, data_type, image_model, text_model,intra_criterion,inter_cr
 
 # In[5]:
 
-def fine_tune_train(data_loader, image_model,text_model,data_type,device,criterion,
-                    optimizer_image, optimizer_text, scheduler_image=None,scheduler_text=None, caption_idx=None):
+def fine_tune_train(data_loader, image_model, text_model, data_type, device, criterion,
+                    optimizer_image, optimizer_text, scheduler_image=None, scheduler_text=None, caption_idx=None):
+    """
+    Trains the image and text models on the given data_loader.
+
+    Parameters:
+    data_loader: DataLoader
+        The data loader that contains the image and caption data.
+    image_model: nn.Module
+        The image model to be fine-tuned.
+    text_model: nn.Module
+        The text model to be fine-tuned.
+    data_type: str
+        The type of data loader being used.
+    device: str
+        The device to train on.
+    criterion: nn.Module
+        The loss function.
+    optimizer_image: torch.optim.Optimizer
+        The optimizer for the image model.
+    optimizer_text: torch.optim.Optimizer
+        The optimizer for the text model.
+    scheduler_image: torch.optim.lr_scheduler._LRScheduler
+        The learning rate scheduler for the image model.
+    scheduler_text: torch.optim.lr_scheduler._LRScheduler
+        The learning rate scheduler for the text model.
+    caption_idx: int
+        The index of the caption data in the data loader.
+
+    Returns:
+    float: The epoch loss.
+    """
     image_model.train()
     text_model.train()
-    loss_epoch=0
+    loss_epoch = 0
     for idx, batch in enumerate(data_loader):
-        if data_type=='flickr_travel':
-            image , caption = batch[0], batch[1]
-        if data_type=='flickr30k':
-            image,caption = batch[0], batch[caption_idx]
+        if data_type == 'flickr_travel':
+            image, caption = batch[0], batch[1]
+        if data_type == 'flickr30k':
+            image, caption = batch[0], batch[caption_idx]
 
-        img_embed = image_model(image,device,single=False)
-        cap_embed = text_model(caption,device,single=False)
+        img_embed = image_model(image, device, single=False)
+        cap_embed = text_model(caption, device, single=False)
 
-
-        loss=criterion(img_embed,cap_embed,batch[0].shape[0]) + criterion(cap_embed,img_embed,batch[0].shape[0])
-        #loss=0.1*criterion(img_embed,cap_embed) 
+        loss = criterion(img_embed, cap_embed, batch[0].shape[0]) + criterion(cap_embed, img_embed, batch[0].shape[0])
+        # loss = 0.1 * criterion(img_embed, cap_embed) 
         loss.backward()
         optimizer_image.step()
         optimizer_text.step()
@@ -180,11 +209,33 @@ def fine_tune_train(data_loader, image_model,text_model,data_type,device,criteri
         scheduler_image.step()
     if scheduler_text:
         scheduler_text.step()
-        
-    return round(epoch_loss,4)
+
+    return round(epoch_loss, 4)
 
 
 def fine_tune_val(data_loader, image_model,text_model,data_type,device,criterion, caption_idx=None):
+           """
+    Validates the image and text models on the given data_loader.
+
+    Parameters:
+    data_loader: DataLoader
+        The data loader that contains the image and caption data.
+    image_model: nn.Module
+        The image model to be validated.
+    text_model: nn.Module
+        The text model to be validated.
+    data_type: str
+        The type of data loader being used.
+    device: str
+        The device to validate on.
+    criterion: nn.Module
+        The loss function.
+    caption_idx: int
+        The index of the caption data in the data loader.
+
+    Returns:
+    float: The epoch loss.
+    """
     loss_epoch=0
     for idx, batch in enumerate(data_loader):
         image_model.eval()
