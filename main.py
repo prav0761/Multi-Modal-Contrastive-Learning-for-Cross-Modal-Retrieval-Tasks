@@ -47,7 +47,9 @@ torch.cuda.empty_cache()
 
 def main(args):
     
-    
+     """
+    This function contains the main code.
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Initialize trial number
     trial_number = args.trial_number
