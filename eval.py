@@ -52,6 +52,16 @@ from logger import Logger ,Fine_Tune_Logger
 from train_fns import train, test , fine_tune_train ,fine_tune_val
 from args import args_c , args_finetune
 def main(image, text):
+       """
+    This function fine-tunes an image and a text model on the Flickr30k dataset and computes
+    the recall scores for the validation set. The image and text models are fine-tuned separately
+    and then combined to generate image and text embeddings. The recall scores are computed by
+    retrieving the most similar captions to each image and each caption.
+
+    Args:
+        image (str): Path to the image fine-tuned model weights file.
+        text (str): Path to the text fine-tuned model weights file.
+    """
     torch.cuda.empty_cache()
     torch.manual_seed(1234)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
