@@ -29,7 +29,7 @@ Please use the below given google drive links for downloading captions file, ima
 Please run on v100 or p100 in maverick2 since gtx will have memory issues, in frontera you can run in all devices.
 ## Captions Download Link
 Captions file - https://drive.google.com/file/d/1iYykGUUOKlFhNT8nT_RHTKXUQPcQjQ23/view?usp=share_link
-Once downloaded use this command to decompress and extract the results_20130124.token file.
+Once downloaded use this command to decompress and extract  results_20130124.token file.
 ```
 $ tar-xvzf captions_file.tar
 ```
